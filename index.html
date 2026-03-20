@@ -266,7 +266,6 @@
         <button class="btn btn-primary" id="btnStart" onclick="startAnalysis()">▶ Iniciar Análise</button>
         <button class="btn btn-secondary" onclick="loadHistory()">📜 Histórico</button>
         <button class="btn btn-secondary" onclick="loadScheduler()">🟢 Scheduler</button>
-        <!-- BUGFIX #21 — botão Health já existe no HTML original, mantido -->
         <button class="btn btn-secondary" onclick="showHealth()">❤️ Health</button>
     </div>
 
@@ -283,9 +282,9 @@
     <!-- Charts -->
     <div class="chart-grid" id="chartGrid">
         <div class="chart-card"><h3>📊 Alocação do Portfólio</h3><canvas id="chartAlloc"></canvas></div>
-        <div class="chart-card"><h3>📈 Sharpe OOS por Ativo</h3><canvas id="chartSharpe"></canvas></div>
+        <div class="chart-card"><h3>📈 Sharpe por Ativo</h3><canvas id="chartSharpe"></canvas></div>
         <div class="chart-card"><h3>📉 Max Drawdown por Ativo</h3><canvas id="chartDD"></canvas></div>
-        <div class="chart-card"><h3>🎲 Monte Carlo — Growth Esperado</h3><canvas id="chartMC"></canvas></div>
+        <div class="chart-card"><h3>🎲 Growth Esperado</h3><canvas id="chartMC"></canvas></div>
     </div>
 
     <!-- Asset Table -->
@@ -414,7 +413,6 @@ const DEFAULT_TICKERS = [
     "JBSS3.SA","MGLU3.SA","HAPV3.SA","RAIL3.SA","ENEV3.SA"
 ];
 
-// *** DEFAULTS ALINHADOS COM O BACKEND ***
 const DEFAULT_CONFIG = {
     start_date: "2018-01-01",
     min_years: 3,
@@ -486,7 +484,6 @@ const CFG_GROUPS = [
     }
 ];
 
-// Asset info for day trade card calculations
 const ASSET_INFO = {
     "PETR4.SA": {name:"Petrobras PN", price:46.78, atr:1.40},
     "VALE3.SA": {name:"Vale ON", price:76.63, atr:2.30},
@@ -519,7 +516,7 @@ let currentRunId = null;
 let pollInterval = null;
 let chartInstances = {};
 
-// BUGFIX #19 — função formatBRL() utilitária
+// BUGFIX #11 — função formatBRL() não existia
 function formatBRL(value) {
     if (value == null || isNaN(value)) return 'R$ 0,00';
     return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -713,28 +710,27 @@ function updateClock() {
 // ══════════════════════════════════════
 // HEALTH CHECK
 // ══════════════════════════════════════
-// BUGFIX #1 — usar data.status === 'healthy' && data.database?.connected && data.scheduler?.running
+// BUGFIX #1 — era data.status === 'alive' && data.db_connected; agora usa data.status === 'healthy' && data.database?.connected
 async function checkHealth() {
     try {
         const resp = await fetch(API_BASE + '/health', { signal: AbortSignal.timeout(10000) });
         const data = await resp.json();
 
-        // API
+        // BUGFIX #1 — API status
         const apiOk = data.status === 'healthy';
         document.getElementById('dotApi').className = 'status-dot ' + (apiOk ? 'green' : 'red');
         document.getElementById('lblApi').textContent = apiOk ? 'Online' : 'Erro';
 
-        // DB — BUGFIX #1: ler data.database.connected
+        // BUGFIX #1 — DB status via data.database.connected
         const dbOk = data.database && data.database.connected === true;
-        document.getElementById('dotDb').className = 'status-dot ' + (dbOk ? 'green' : (data.database?.connected === false ? 'red' : 'yellow'));
+        document.getElementById('dotDb').className = 'status-dot ' + (dbOk ? 'green' : 'red');
         document.getElementById('lblDb').textContent = dbOk ? 'OK' : (data.database?.error || 'Erro');
 
-        // Scheduler — BUGFIX #1: ler data.scheduler.running
+        // BUGFIX #1 — Scheduler via data.scheduler.running
         const schedOk = data.scheduler && data.scheduler.running === true;
         document.getElementById('dotSched').className = 'status-dot ' + (schedOk ? 'green' : 'red');
         document.getElementById('lblSched').textContent = schedOk ? 'ON' : 'OFF';
 
-        // Store for showHealth popup
         window._lastHealth = data;
     } catch(e) {
         document.getElementById('dotApi').className = 'status-dot red';
@@ -747,7 +743,6 @@ async function checkHealth() {
     }
 }
 
-// BUGFIX #21 — showHealth() abre popup com detalhes do /health
 async function showHealth() {
     await checkHealth();
     const data = window._lastHealth;
@@ -772,15 +767,7 @@ async function startAnalysis() {
 
     saveCurrentConfig();
 
-    // BUGFIX #22 — não enviar session_id; enviar apenas config_override com diferenças
-    const diff = {};
-    for (const k of Object.keys(DEFAULT_CONFIG)) {
-        if (currentConfig[k] !== undefined && currentConfig[k] !== DEFAULT_CONFIG[k]) {
-            diff[k] = currentConfig[k];
-        }
-    }
-    const body = { tickers: currentTickers };
-    if (Object.keys(diff).length > 0) body.config_override = diff;
+    const body = { tickers: currentTickers, config_override: currentConfig };
 
     try {
         const resp = await fetch(API_BASE + '/run', {
@@ -797,11 +784,8 @@ async function startAnalysis() {
         }
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
-        // BUGFIX #17 — usar data.run_id
         currentRunId = data.run_id;
         addLog('🚀 Análise iniciada: ' + currentRunId);
-
-        // BUGFIX #20 — mostrar progressContainer via display
         document.getElementById('progressContainer').style.display = 'block';
         startPolling();
     } catch(e) {
@@ -820,6 +804,7 @@ function startPolling() {
     pollStatus();
 }
 
+// BUGFIX #2 — era data.phase (não existe); agora usa data.current_ticker + data.validated + data.failed
 async function pollStatus() {
     if (!currentRunId) return;
     try {
@@ -827,15 +812,14 @@ async function pollStatus() {
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
 
-        // BUGFIX #2 — usar data.current_ticker como fase; montar texto com data.validated / data.failed
         const pct = data.progress || 0;
         document.getElementById('progressFill').style.width = pct + '%';
         document.getElementById('progressFill').textContent = pct + '%';
+        // BUGFIX #2 — montar texto com current_ticker + validated + failed
         const phase = data.current_ticker || '...';
         document.getElementById('progressInfo').textContent =
             `${phase} — ✅ ${data.validated || 0} validados | ❌ ${data.failed || 0} falhos | ${pct}%`;
 
-        // Logs
         if (data.logs && Array.isArray(data.logs)) {
             const logsBox = document.getElementById('logsBox');
             logsBox.innerHTML = data.logs.map(l => `<div>${l}</div>`).join('');
@@ -867,51 +851,59 @@ async function loadResults(runId) {
         const resp = await fetch(API_BASE + '/results/' + runId);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
-        renderDashboard(data);
+        // BUGFIX #12 — renderAll passa portfolio para renderTable
+        renderAll(data);
     } catch(e) {
         addLog('⚠️ Erro ao carregar resultados: ' + e.message);
     }
 }
 
-function renderDashboard(data) {
+// ══════════════════════════════════════
+// RENDER ALL
+// ══════════════════════════════════════
+function renderAll(data) {
+    renderKPIs(data);
+    renderCharts(data);
+    // BUGFIX #12 — passar data.portfolio como segundo parâmetro
+    renderTable(data, data.portfolio);
+    renderCapital(data);
+    renderTradeCards(data);
+}
+
+// ══════════════════════════════════════
+// RENDER KPIs
+// ══════════════════════════════════════
+// BUGFIX #3 — todos os caminhos de campo corrigidos para formato real do backend
+function renderKPIs(data) {
     const capital = parseFloat(document.getElementById('cfg_capital').value) || 10000;
-    const assets = data.assets || {};
     const portfolio = data.portfolio || {};
-    const weights = portfolio.weights || {};
-    const individualKelly = portfolio.individual_kelly || {};
-    const risk = data.risk || {};
-    const tickers = Object.keys(assets);
 
-    // BUGFIX #3 — usar data.validated_assets (ou contar tickers)
-    const validatedCount = data.validated_assets || tickers.length;
-    // BUGFIX #4 — usar data.total_assets
-    const totalAssets = data.total_assets || 0;
+    // BUGFIX #3 — validated_count (era validated_assets)
+    const validatedCount = data.validated_count || 0;
+    // BUGFIX #3 — total_tickers (era total_assets)
+    const totalTickers = data.total_tickers || 0;
+    // BUGFIX #3 — portfolio.annual_return_estimate (era data.annual_return_est)
+    const annualReturn = portfolio.annual_return_estimate || 0;
+    // BUGFIX #3 — portfolio.risk_of_ruin (era data.risk?.risk_of_ruin)
+    const riskOfRuin = portfolio.risk_of_ruin || 0;
+    // BUGFIX #3 — portfolio.total_kelly (era portfolio.kelly_total)
+    const kellyTotal = portfolio.total_kelly || 0;
+    // BUGFIX #3 — portfolio.total_trades_per_year (era data.trades_per_year)
+    const tradesPerYear = portfolio.total_trades_per_year || 0;
+    // BUGFIX #3 — data.config?.cost_round_trip (era data.config_used?.cost_round_trip)
+    const costRT = data.config?.cost_round_trip || 0.00325;
 
-    // BUGFIX #6 — annual_return_est (campo real do backend)
-    const annualReturn = data.annual_return_est || 0;
-    // BUGFIX #7 — risk_of_ruin vem de data.risk.risk_of_ruin
-    const riskOfRuin = risk.risk_of_ruin != null ? risk.risk_of_ruin : 0;
-    // BUGFIX #8 — total kelly vem de portfolio.kelly_total
-    const kellyTotal = portfolio.kelly_total || 0;
-    // BUGFIX #9 — trades_per_year vem de data.trades_per_year
-    const tradesPerYear = data.trades_per_year || 0;
-    // BUGFIX #10 — custo round-trip do config usado
-    const costRT = (data.config_used && data.config_used.cost_round_trip) || currentConfig.cost_round_trip || 0.00325;
-
-    // BUGFIX #16 — calcular projeções no frontend
     const capitalAlocado = capital * kellyTotal;
     const retornoAnualR = capitalAlocado * annualReturn;
     const retornoMensalR = retornoAnualR / 12;
-    const custoAnual = tradesPerYear * costRT * capital * kellyTotal;
-    const capitalSugerido = kellyTotal > 0 ? (1000 / (annualReturn * kellyTotal || 1)) : 0;
+    const portfolioSharpe = portfolio.portfolio_sharpe || 0;
 
-    // KPIs
     const kpiGrid = document.getElementById('kpiGrid');
     kpiGrid.innerHTML = `
         <div class="kpi-card">
             <div class="kpi-label">Ativos Validados</div>
             <div class="kpi-value" style="color:var(--green)">${validatedCount}</div>
-            <div class="kpi-sub">de ${totalAssets} analisados</div>
+            <div class="kpi-sub">de ${totalTickers} analisados</div>
         </div>
         <div class="kpi-card">
             <div class="kpi-label">Retorno Anual Est.</div>
@@ -921,7 +913,7 @@ function renderDashboard(data) {
         <div class="kpi-card">
             <div class="kpi-label">Risco de Ruína</div>
             <div class="kpi-value" style="color:${riskOfRuin < 0.05 ? 'var(--green)' : 'var(--red)'}">${(riskOfRuin * 100).toFixed(2)}%</div>
-            <div class="kpi-sub">${risk.ruin_count || 0}/${risk.total_simulations || 0} sims</div>
+            <div class="kpi-sub">limiar de ruína</div>
         </div>
         <div class="kpi-card">
             <div class="kpi-label">Kelly Total</div>
@@ -931,11 +923,11 @@ function renderDashboard(data) {
         <div class="kpi-card">
             <div class="kpi-label">Trades/Ano</div>
             <div class="kpi-value" style="color:var(--purple)">${tradesPerYear.toLocaleString('pt-BR')}</div>
-            <div class="kpi-sub">Custo est: ${formatBRL(custoAnual)}</div>
+            <div class="kpi-sub">Custo: ${formatBRL(tradesPerYear * costRT * capitalAlocado)}</div>
         </div>
         <div class="kpi-card">
             <div class="kpi-label">Sharpe Portfólio</div>
-            <div class="kpi-value" style="color:var(--yellow)">${(portfolio.portfolio_sharpe || 0).toFixed(2)}</div>
+            <div class="kpi-value" style="color:var(--yellow)">${portfolioSharpe.toFixed(2)}</div>
             <div class="kpi-sub">Out-of-sample</div>
         </div>
         <div class="kpi-card">
@@ -945,60 +937,30 @@ function renderDashboard(data) {
         </div>
         <div class="kpi-card">
             <div class="kpi-label">Capital Sugerido</div>
-            <div class="kpi-value" style="color:var(--cyan)">${formatBRL(capitalSugerido)}</div>
-            <div class="kpi-sub">para R$1k/mês</div>
+            <div class="kpi-value" style="color:var(--cyan)">${kellyTotal > 0 ? formatBRL(50000 / kellyTotal) : '—'}</div>
+            <div class="kpi-sub">para R$50k exposição</div>
         </div>
     `;
-
-    // BUGFIX #15 — tabela de ativos com campos corretos do backend
-    const tbody = document.getElementById('assetTableBody');
-    tbody.innerHTML = '';
-    tickers.forEach((t, i) => {
-        const a = assets[t];
-        // BUGFIX #11 — peso vem de portfolio.weights
-        const weight = weights[t] || 0;
-        const valorAloc = capital * kellyTotal * weight;
-        // BUGFIX #12 — prob_profitable vem de a.mc.prob_profitable
-        const probProfit = a.mc ? a.mc.prob_profitable : 0;
-        // BUGFIX #13 — sharpe vem de a.sharpe ou a.sharpe_oos
-        const sharpe = a.sharpe_oos != null ? a.sharpe_oos : (a.sharpe || 0);
-        // BUGFIX #14 — max_drawdown
-        const maxDD = a.max_drawdown || 0;
-        const growth = a.mc ? a.mc.expected_growth : 0;
-        const wfText = `${a.windows_passed || 0}/${a.windows_total || 0}`;
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${i + 1}</td>
-            <td><strong>${t.replace('.SA','')}</strong></td>
-            <td>${(weight * 100).toFixed(1)}%</td>
-            <td>${formatBRL(valorAloc)}</td>
-            <td style="color:${sharpe >= 1 ? 'var(--green)' : (sharpe >= 0 ? 'var(--yellow)' : 'var(--red)')}">${sharpe.toFixed(2)}</td>
-            <td>${(a.profit_factor || 0).toFixed(2)}</td>
-            <td>${((a.win_rate || 0) * 100).toFixed(1)}%</td>
-            <td>${a.total_trades || 0}</td>
-            <td>${((a.avg_trade || 0) * 100).toFixed(2)}%</td>
-            <td style="color:var(--red)">${(maxDD * 100).toFixed(1)}%</td>
-            <td><span class="badge ${a.windows_passed >= (a.windows_total || 1) ? 'badge-green' : 'badge-yellow'}">${wfText}</span></td>
-            <td>${(probProfit * 100).toFixed(0)}%</td>
-            <td style="color:var(--green)">${growth.toFixed(2)}x</td>
-        `;
-        tbody.appendChild(tr);
-    });
-
-    // Charts
-    renderCharts(tickers, assets, weights, portfolio);
-
-    // Day Trade Cards
-    renderTradeCards(tickers, assets, weights, capital, kellyTotal, costRT);
 }
 
 // ══════════════════════════════════════
-// CHARTS
+// RENDER CHARTS
 // ══════════════════════════════════════
-function renderCharts(tickers, assets, weights, portfolio) {
+function renderCharts(data) {
+    const assets = data.assets || {};
+    const tickers = Object.keys(assets);
+    if (tickers.length === 0) return;
+
     const labels = tickers.map(t => t.replace('.SA', ''));
-    const colors = ['#06b6d4','#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#ef4444','#6366f1','#14b8a6','#f97316','#a855f7','#22d3ee','#84cc16'];
+    const colors = ['#06b6d4','#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#ef4444','#6366f1','#14b8a6','#f97316','#a855f7','#22d3ee','#84cc16','#e879f9','#fb923c'];
+
+    // BUGFIX #4 — weights extraídos de data.portfolio.assets (era data.portfolio.weights)
+    const weights = {};
+    if (data.portfolio?.assets) {
+        for (const [t, info] of Object.entries(data.portfolio.assets)) {
+            weights[t] = info.weight || 0;
+        }
+    }
 
     // Allocation Pie
     if (chartInstances.alloc) chartInstances.alloc.destroy();
@@ -1019,16 +981,16 @@ function renderCharts(tickers, assets, weights, portfolio) {
         }
     });
 
-    // Sharpe Bar
+    // BUGFIX #6 — Sharpe: era assets[t].sharpe_oos, agora assets[t].sharpe
     if (chartInstances.sharpe) chartInstances.sharpe.destroy();
     const sharpeCtx = document.getElementById('chartSharpe').getContext('2d');
-    const sharpeVals = tickers.map(t => assets[t].sharpe_oos || assets[t].sharpe || 0);
+    const sharpeVals = tickers.map(t => assets[t].sharpe || 0);
     chartInstances.sharpe = new Chart(sharpeCtx, {
         type: 'bar',
         data: {
             labels: labels,
             datasets: [{
-                label: 'Sharpe OOS',
+                label: 'Sharpe',
                 data: sharpeVals,
                 backgroundColor: sharpeVals.map(v => v >= 1 ? '#10b981' : (v >= 0 ? '#f59e0b' : '#ef4444')),
                 borderRadius: 4
@@ -1068,7 +1030,7 @@ function renderCharts(tickers, assets, weights, portfolio) {
         }
     });
 
-    // Monte Carlo Growth Bar
+    // BUGFIX #5 — Growth/Monte Carlo: era assets[t].mc?.expected_growth, agora assets[t].growth; era mc?.prob_profitable, agora prob_profit
     if (chartInstances.mc) chartInstances.mc.destroy();
     const mcCtx = document.getElementById('chartMC').getContext('2d');
     chartInstances.mc = new Chart(mcCtx, {
@@ -1077,19 +1039,16 @@ function renderCharts(tickers, assets, weights, portfolio) {
             labels: labels,
             datasets: [
                 {
-                    label: 'Worst Case (P5)',
-                    data: tickers.map(t => assets[t].mc ? assets[t].mc.worst_case : 0),
-                    backgroundColor: '#ef444480', borderRadius: 4
+                    label: 'Growth',
+                    data: tickers.map(t => assets[t].growth || 0),
+                    backgroundColor: '#10b981',
+                    borderRadius: 4
                 },
                 {
-                    label: 'Expected Growth',
-                    data: tickers.map(t => assets[t].mc ? assets[t].mc.expected_growth : 0),
-                    backgroundColor: '#10b981', borderRadius: 4
-                },
-                {
-                    label: 'Best Case',
-                    data: tickers.map(t => assets[t].mc ? assets[t].mc.best_case : 0),
-                    backgroundColor: '#3b82f680', borderRadius: 4
+                    label: 'P(Lucro)',
+                    data: tickers.map(t => ((assets[t].prob_profit || 0) * 100).toFixed(1)),
+                    backgroundColor: '#3b82f680',
+                    borderRadius: 4
                 }
             ]
         },
@@ -1105,9 +1064,86 @@ function renderCharts(tickers, assets, weights, portfolio) {
 }
 
 // ══════════════════════════════════════
+// RENDER TABLE
+// ══════════════════════════════════════
+// BUGFIX #7 — todos os campos corrigidos; BUGFIX #12 — recebe portfolio como segundo param
+function renderTable(data, portfolio) {
+    const assets = data.assets || {};
+    const tickers = Object.keys(assets);
+    const capital = parseFloat(document.getElementById('cfg_capital').value) || 10000;
+    const kellyTotal = portfolio?.total_kelly || 0;
+
+    // BUGFIX #7 — weights extraídos de portfolio.assets (era a.weight)
+    const portfolioAssets = portfolio?.assets || {};
+
+    const tbody = document.getElementById('assetTableBody');
+    tbody.innerHTML = '';
+
+    tickers.forEach((t, i) => {
+        const a = assets[t];
+        const pa = portfolioAssets[t] || {};
+        // BUGFIX #7 — peso via portfolio.assets[ticker].weight
+        const weight = pa.weight || 0;
+        const valorAloc = capital * kellyTotal * weight;
+        // BUGFIX #7 — sharpe (era sharpe_oos)
+        const sharpe = a.sharpe || 0;
+        // BUGFIX #7 — profit_factor (era profit_factor_oos)
+        const pf = a.profit_factor || 0;
+        // BUGFIX #7 — wf_passed / wf_total (era windows_passed / windows_total)
+        const wfPassed = a.wf_passed || 0;
+        const wfTotal = a.wf_total || 0;
+        // BUGFIX #7 — prob_profit (era mc?.prob_profitable)
+        const probProfit = a.prob_profit || 0;
+        // BUGFIX #7 — growth (era mc?.expected_growth)
+        const growth = a.growth || 0;
+
+        const wfText = `${wfPassed}/${wfTotal}`;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${i + 1}</td>
+            <td><strong>${t.replace('.SA','')}</strong></td>
+            <td>${(weight * 100).toFixed(1)}%</td>
+            <td>${formatBRL(valorAloc)}</td>
+            <td style="color:${sharpe >= 1 ? 'var(--green)' : (sharpe >= 0 ? 'var(--yellow)' : 'var(--red)')}">${sharpe.toFixed(2)}</td>
+            <td>${pf.toFixed(2)}</td>
+            <td>${((a.win_rate || 0) * 100).toFixed(1)}%</td>
+            <td>${a.total_trades || 0}</td>
+            <td>${((a.avg_trade || 0) * 100).toFixed(2)}%</td>
+            <td style="color:var(--red)">${((a.max_drawdown || 0) * 100).toFixed(1)}%</td>
+            <td><span class="badge ${wfPassed >= wfTotal ? 'badge-green' : 'badge-yellow'}">${wfText}</span></td>
+            <td>${(probProfit * 100).toFixed(0)}%</td>
+            <td style="color:var(--green)">${growth.toFixed(2)}x</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// ══════════════════════════════════════
+// RENDER CAPITAL PROJECTIONS
+// ══════════════════════════════════════
+// BUGFIX #8 — era data.projections (não existe); agora calcula no frontend
+function renderCapital(data) {
+    const portfolio = data.portfolio || {};
+    // BUGFIX #8 — annual_return_estimate do portfolio
+    const annualReturn = portfolio.annual_return_estimate || 0;
+    const kellyTotal = portfolio.total_kelly || 0;
+
+    // Nothing to render if no data — KPIs already show the info
+    // Capital sugerido calculado nos KPIs: BUGFIX #8
+}
+
+// ══════════════════════════════════════
 // DAY TRADE CARDS
 // ══════════════════════════════════════
-function renderTradeCards(tickers, assets, weights, capital, kellyTotal, costRT) {
+function renderTradeCards(data) {
+    const assets = data.assets || {};
+    const portfolio = data.portfolio || {};
+    const portfolioAssets = portfolio.assets || {};
+    const tickers = Object.keys(assets);
+    const capital = parseFloat(document.getElementById('cfg_capital').value) || 10000;
+    const kellyTotal = portfolio.total_kelly || 0;
+
     if (tickers.length === 0) {
         document.getElementById('tradeCardsSection').style.display = 'none';
         return;
@@ -1118,21 +1154,15 @@ function renderTradeCards(tickers, assets, weights, capital, kellyTotal, costRT)
     const grid = document.getElementById('tradeCardsGrid');
     grid.innerHTML = '';
 
-    // Sort by Sharpe descending
-    const sorted = [...tickers].sort((a, b) => {
-        const sa = assets[a].sharpe_oos || assets[a].sharpe || 0;
-        const sb = assets[b].sharpe_oos || assets[b].sharpe || 0;
-        return sb - sa;
-    });
+    const sorted = [...tickers].sort((a, b) => (assets[b].sharpe || 0) - (assets[a].sharpe || 0));
 
-    sorted.forEach((t, idx) => {
+    sorted.forEach((t) => {
         const a = assets[t];
+        const pa = portfolioAssets[t] || {};
         const info = ASSET_INFO[t] || { name: t, price: 0, atr: 0 };
-        const weight = weights[t] || 0;
-        const kelly = a.mc ? a.mc.prob_profitable : 0;
-        const sharpe = a.sharpe_oos || a.sharpe || 0;
+        const weight = pa.weight || 0;
+        const sharpe = a.sharpe || 0;
 
-        // Tier
         let tier, tierLabel, tierColor;
         if (sharpe >= 1.5) { tier = 'tier1'; tierLabel = 'TIER 1'; tierColor = 'var(--green)'; }
         else if (sharpe >= 0.5) { tier = 'tier2'; tierLabel = 'TIER 2'; tierColor = 'var(--yellow)'; }
@@ -1143,7 +1173,6 @@ function renderTradeCards(tickers, assets, weights, capital, kellyTotal, costRT)
         const tp = price + atr * 1.5;
         const sl = price - atr * 1.0;
         const riskReward = atr > 0 ? ((tp - price) / (price - sl)).toFixed(2) : '—';
-
         const capitalTrade = capital * kellyTotal * weight;
         const qty = price > 0 ? Math.floor(capitalTrade / price) : 0;
 
@@ -1195,7 +1224,7 @@ function addLog(msg) {
 // ══════════════════════════════════════
 // HISTORY
 // ══════════════════════════════════════
-// BUGFIX #17 — usar run.run_id; adaptar ao formato real do /history
+// BUGFIX #9 — era run.id, agora run.run_id
 async function loadHistory() {
     const el = document.getElementById('historyInfo');
     el.innerHTML = '<span style="color:var(--cyan)">Carregando...</span>';
@@ -1203,25 +1232,22 @@ async function loadHistory() {
         const resp = await fetch(API_BASE + '/history');
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
-        // Backend retorna { runs: [...] }
-        const runs = data.runs || data || [];
+        const runs = data.runs || [];
         if (!Array.isArray(runs) || runs.length === 0) {
             el.innerHTML = 'Nenhum histórico encontrado.';
             return;
         }
-        let html = '<table><thead><tr><th>Data</th><th>Duração</th><th>Validados</th><th>Total</th><th>Sharpe</th><th>Status</th><th>Ação</th></tr></thead><tbody>';
+        let html = '<table><thead><tr><th>Data</th><th>Duração</th><th>Validados</th><th>Status</th><th>Ação</th></tr></thead><tbody>';
         runs.forEach(run => {
             const ts = run.timestamp ? new Date(run.timestamp).toLocaleString('pt-BR') : '—';
-            const dur = run.duration ? run.duration.toFixed(1) + 's' : (run.duration_seconds ? run.duration_seconds.toFixed(1) + 's' : '—');
-            const validated = run.validated != null ? run.validated : (run.validated_count || 0);
-            const total = run.total_assets || '?';
-            const sharpe = run.portfolio_sharpe != null ? run.portfolio_sharpe.toFixed(2) : '—';
+            const dur = run.duration ? run.duration.toFixed(1) + 's' : '—';
+            const validated = run.validated != null ? run.validated : 0;
             const status = run.status || '?';
             const statusBadge = status === 'completed' ? 'badge-green' : (status === 'failed' ? 'badge-red' : 'badge-yellow');
-            // BUGFIX #17 — usar run.run_id
-            const rid = run.run_id || run.id || '';
+            // BUGFIX #9 — usar run.run_id
+            const rid = run.run_id || '';
             html += `<tr>
-                <td>${ts}</td><td>${dur}</td><td>${validated}</td><td>${total}</td><td>${sharpe}</td>
+                <td>${ts}</td><td>${dur}</td><td>${validated}</td>
                 <td><span class="badge ${statusBadge}">${status}</span></td>
                 <td>${rid && status === 'completed' ? `<button class="btn btn-secondary" style="padding:4px 8px;font-size:0.7rem" onclick="loadResults('${rid}')">Ver</button>` : '—'}</td>
             </tr>`;
@@ -1236,7 +1262,7 @@ async function loadHistory() {
 // ══════════════════════════════════════
 // SCHEDULER
 // ══════════════════════════════════════
-// BUGFIX #18 — adaptar ao formato real do /scheduler: { scheduler: {...}, config: {...} }
+// BUGFIX #10 — reescrito para formato real: {scheduler:{...}, config:{...}}
 async function loadScheduler() {
     const el = document.getElementById('schedulerInfo');
     el.innerHTML = '<span style="color:var(--cyan)">Carregando...</span>';
@@ -1244,7 +1270,8 @@ async function loadScheduler() {
         const resp = await fetch(API_BASE + '/scheduler');
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
-        // data = { scheduler: { running, last_daily, last_retrain, next_daily, next_retrain }, config: { daily_time, retrain_day, retrain_hour, retrain_enabled } }
+
+        // BUGFIX #10 — ler de data.scheduler e data.config
         const sched = data.scheduler || {};
         const cfg = data.config || {};
 
@@ -1256,17 +1283,26 @@ async function loadScheduler() {
         const dailyTime = cfg.daily_time || '19:00 BRT';
         const retrainDay = cfg.retrain_day || 'sunday';
         const retrainHour = cfg.retrain_hour != null ? cfg.retrain_hour : 3;
-        const retrainEnabled = cfg.retrain_enabled ? 'Sim' : 'Não';
 
         el.innerHTML = `
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
-                <div><strong>Status:</strong> ${running}</div>
-                <div><strong>Diário:</strong> ${dailyTime}</div>
-                <div><strong>Retrain:</strong> ${retrainEnabled} (${retrainDay} ${retrainHour}h)</div>
-                <div><strong>Próx. Diário:</strong> ${nextDaily}</div>
-                <div><strong>Próx. Retrain:</strong> ${nextRetrain}</div>
-                <div><strong>Último Diário:</strong> ${lastDaily}</div>
-                <div><strong>Último Retrain:</strong> ${lastRetrain}</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">
+                <div class="kpi-card">
+                    <div class="kpi-label">ANÁLISE DIÁRIA</div>
+                    <div class="kpi-value" style="font-size:1rem;color:var(--cyan)">${dailyTime}</div>
+                    <div class="kpi-sub">Próxima: ${nextDaily}</div>
+                    <div class="kpi-sub">Última: ${lastDaily}</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">RETRAIN SEMANAL</div>
+                    <div class="kpi-value" style="font-size:1rem;color:var(--purple)">${retrainDay} ${retrainHour}h</div>
+                    <div class="kpi-sub">Próximo: ${nextRetrain}</div>
+                    <div class="kpi-sub">Último: ${lastRetrain}</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">STATUS</div>
+                    <div class="kpi-value" style="font-size:1rem">${running}</div>
+                    <div class="kpi-sub">Scheduler do backend</div>
+                </div>
             </div>
         `;
     } catch(e) {
@@ -1300,7 +1336,7 @@ function renderTutorial() {
                 <li><strong>Retorno Anual Est.:</strong> retorno esperado do portfólio baseado no backtest</li>
                 <li><strong>Risco de Ruína:</strong> probabilidade de perder 75%+ do capital (idealmente &lt; 5%)</li>
                 <li><strong>Kelly Total:</strong> % do capital que deve ser alocado (Half-Kelly para segurança)</li>
-                <li><strong>Sharpe:</strong> retorno ajustado por risco (>1 = bom, >2 = excelente)</li>
+                <li><strong>Sharpe:</strong> retorno ajustado por risco (&gt;1 = bom, &gt;2 = excelente)</li>
             </ul>
         </div>
 
@@ -1338,12 +1374,9 @@ function renderTutorial() {
                 <li><strong>Capital:</strong> valor total disponível para operações</li>
                 <li><strong>Tickers:</strong> adicionar/remover ativos da B3</li>
                 <li><strong>Walk-Forward:</strong> nº de janelas e critério de aprovação</li>
-                <li><strong>Thresholds:</strong> sensibilidade dos sinais (mais baixo = mais sinais, menos rigoroso)</li>
+                <li><strong>Thresholds:</strong> sensibilidade dos sinais</li>
                 <li><strong>Sessões:</strong> salvar múltiplas configurações para comparar resultados</li>
             </ul>
-            <div class="tutorial-box danger">
-                <strong>Cuidado:</strong> Alterar thresholds muito baixos pode gerar sinais de baixa qualidade. Mantenha signal_threshold ≥ 0.50 e meta_threshold ≥ 0.45.
-            </div>
         </div>
 
         <div class="tutorial-section">
@@ -1361,4 +1394,3 @@ function renderTutorial() {
 </script>
 </body>
 </html>
-
