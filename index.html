@@ -222,6 +222,9 @@
         .popup p { color: var(--text2); font-size: 0.85rem; line-height: 1.6; }
         .popup .close-btn { margin-top: 14px; }
 
+        /* Health popup */
+        .health-detail { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin-top: 10px; font-family: var(--mono); font-size: 0.78rem; color: var(--text2); white-space: pre-wrap; }
+
         /* Responsive */
         @media (max-width: 768px) {
             .header h1 { font-size: 1.3rem; }
@@ -263,7 +266,8 @@
         <button class="btn btn-primary" id="btnStart" onclick="startAnalysis()">▶ Iniciar Análise</button>
         <button class="btn btn-secondary" onclick="loadHistory()">📜 Histórico</button>
         <button class="btn btn-secondary" onclick="loadScheduler()">🟢 Scheduler</button>
-        <button class="btn btn-secondary" onclick="checkHealth()">❤️ Health</button>
+        <!-- BUGFIX #21 — botão Health já existe no HTML original, mantido -->
+        <button class="btn btn-secondary" onclick="showHealth()">❤️ Health</button>
     </div>
 
     <div class="progress-container" id="progressContainer">
@@ -391,6 +395,7 @@
     <div class="popup">
         <h3 id="popupTitle"></h3>
         <p id="popupText"></p>
+        <div id="popupExtra"></div>
         <button class="btn btn-secondary close-btn" onclick="closePopup()">Fechar</button>
     </div>
 </div>
@@ -417,9 +422,9 @@ const DEFAULT_CONFIG = {
     wf_splits: 4,
     wf_train_ratio: 0.75,
     wf_min_pass: 2,
-    wf_min_trades_per_window: 10,
-    signal_threshold: 0.52,
-    meta_threshold: 0.48,
+    wf_min_trades_per_window: 5,
+    signal_threshold: 0.50,
+    meta_threshold: 0.45,
     mc_simulations: 2000,
     mc_risk_free: 0.1175,
     kelly_fraction: 0.5,
@@ -452,8 +457,8 @@ const CFG_GROUPS = [
     },
     {
         title: "🎯 Sinais", fields: [
-            {id:"signal_threshold", label:"Threshold Sinal", type:"number", help:"Probabilidade mínima do ensemble para gerar sinal (0.52=flexível)."},
-            {id:"meta_threshold", label:"Threshold Meta", type:"number", help:"Confiança mínima do meta-labeler (0.48=flexível)."}
+            {id:"signal_threshold", label:"Threshold Sinal", type:"number", help:"Probabilidade mínima do ensemble para gerar sinal (0.50=flexível)."},
+            {id:"meta_threshold", label:"Threshold Meta", type:"number", help:"Confiança mínima do meta-labeler (0.45=flexível)."}
         ]
     },
     {
@@ -514,6 +519,12 @@ let currentRunId = null;
 let pollInterval = null;
 let chartInstances = {};
 
+// BUGFIX #19 — função formatBRL() utilitária
+function formatBRL(value) {
+    if (value == null || isNaN(value)) return 'R$ 0,00';
+    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
 // ══════════════════════════════════════
 // INIT
 // ══════════════════════════════════════
@@ -550,7 +561,6 @@ function loadFromStorage() {
 
 function saveCurrentConfig() {
     try {
-        // Read all config fields
         for (const group of CFG_GROUPS) {
             for (const field of group.fields) {
                 const el = document.getElementById('cfg_' + field.id);
@@ -670,10 +680,24 @@ function renderConfigGrid() {
 function showHelp(id, text) {
     document.getElementById('popupTitle').textContent = id;
     document.getElementById('popupText').textContent = text;
+    document.getElementById('popupExtra').innerHTML = '';
     document.getElementById('popupOverlay').classList.add('active');
 }
+
 function closePopup() {
     document.getElementById('popupOverlay').classList.remove('active');
+}
+
+// ══════════════════════════════════════
+// TABS
+// ══════════════════════════════════════
+function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach((el, i) => {
+        const names = ['dashboard', 'config', 'tutorial'];
+        el.classList.toggle('active', names[i] === tab);
+    });
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
 }
 
 // ══════════════════════════════════════
@@ -681,176 +705,157 @@ function closePopup() {
 // ══════════════════════════════════════
 function updateClock() {
     const now = new Date();
-    const brt = new Date(now.toLocaleString('en-US', {timeZone: 'America/Sao_Paulo'}));
-    document.getElementById('clock').textContent =
-        brt.toLocaleDateString('pt-BR') + ', ' + brt.toLocaleTimeString('pt-BR');
+    document.getElementById('clock').textContent = now.toLocaleString('pt-BR', {
+        timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit'
+    }) + ' BRT';
 }
 
 // ══════════════════════════════════════
-// TAB SWITCHING
+// HEALTH CHECK
 // ══════════════════════════════════════
-function switchTab(name) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-    event.target.classList.add('active');
-    document.getElementById('tab-' + name).classList.add('active');
-}
-
-// ══════════════════════════════════════
-// HEALTH CHECK — CORRIGIDO!
-// ══════════════════════════════════════
+// BUGFIX #1 — usar data.status === 'healthy' && data.database?.connected && data.scheduler?.running
 async function checkHealth() {
-    const dotApi = document.getElementById('dotApi');
-    const dotDb = document.getElementById('dotDb');
-    const dotSched = document.getElementById('dotSched');
-    const lblApi = document.getElementById('lblApi');
-    const lblDb = document.getElementById('lblDb');
-    const lblSched = document.getElementById('lblSched');
-
     try {
-        const resp = await fetch(API_BASE + '/health', {signal: AbortSignal.timeout(10000)});
+        const resp = await fetch(API_BASE + '/health', { signal: AbortSignal.timeout(10000) });
         const data = await resp.json();
 
         // API
-        dotApi.className = 'status-dot green';
-        lblApi.textContent = 'Online';
+        const apiOk = data.status === 'healthy';
+        document.getElementById('dotApi').className = 'status-dot ' + (apiOk ? 'green' : 'red');
+        document.getElementById('lblApi').textContent = apiOk ? 'Online' : 'Erro';
 
-        // DB — CORRIGIDO: ler data.database.connected
-        if (data.database && data.database.connected) {
-            dotDb.className = 'status-dot green';
-            lblDb.textContent = 'OK';
-        } else {
-            dotDb.className = 'status-dot red';
-            lblDb.textContent = 'Erro';
-        }
+        // DB — BUGFIX #1: ler data.database.connected
+        const dbOk = data.database && data.database.connected === true;
+        document.getElementById('dotDb').className = 'status-dot ' + (dbOk ? 'green' : (data.database?.connected === false ? 'red' : 'yellow'));
+        document.getElementById('lblDb').textContent = dbOk ? 'OK' : (data.database?.error || 'Erro');
 
-        // Scheduler — CORRIGIDO: ler data.scheduler.running
-        if (data.scheduler && data.scheduler.running) {
-            dotSched.className = 'status-dot green';
-            lblSched.textContent = 'ON';
-        } else {
-            dotSched.className = 'status-dot red';
-            lblSched.textContent = 'OFF';
-        }
+        // Scheduler — BUGFIX #1: ler data.scheduler.running
+        const schedOk = data.scheduler && data.scheduler.running === true;
+        document.getElementById('dotSched').className = 'status-dot ' + (schedOk ? 'green' : 'red');
+        document.getElementById('lblSched').textContent = schedOk ? 'ON' : 'OFF';
+
+        // Store for showHealth popup
+        window._lastHealth = data;
     } catch(e) {
-        dotApi.className = 'status-dot red';
-        lblApi.textContent = 'Offline';
-        dotDb.className = 'status-dot red';
-        lblDb.textContent = '?';
-        dotSched.className = 'status-dot red';
-        lblSched.textContent = '?';
+        document.getElementById('dotApi').className = 'status-dot red';
+        document.getElementById('lblApi').textContent = 'Offline';
+        document.getElementById('dotDb').className = 'status-dot red';
+        document.getElementById('lblDb').textContent = '?';
+        document.getElementById('dotSched').className = 'status-dot red';
+        document.getElementById('lblSched').textContent = '?';
+        window._lastHealth = null;
     }
 }
 
+// BUGFIX #21 — showHealth() abre popup com detalhes do /health
+async function showHealth() {
+    await checkHealth();
+    const data = window._lastHealth;
+    document.getElementById('popupTitle').textContent = '❤️ Health Check';
+    if (!data) {
+        document.getElementById('popupText').textContent = 'Não foi possível conectar ao backend.';
+        document.getElementById('popupExtra').innerHTML = '';
+    } else {
+        document.getElementById('popupText').textContent = `Status: ${data.status} | Versão: ${data.version}`;
+        document.getElementById('popupExtra').innerHTML = `<div class="health-detail">${JSON.stringify(data, null, 2)}</div>`;
+    }
+    document.getElementById('popupOverlay').classList.add('active');
+}
+
 // ══════════════════════════════════════
-// START ANALYSIS — CORRIGIDO: NÃO ENVIA config_override rígido
+// START ANALYSIS
 // ══════════════════════════════════════
 async function startAnalysis() {
     const btn = document.getElementById('btnStart');
     btn.disabled = true;
     btn.textContent = '⏳ Iniciando...';
 
+    saveCurrentConfig();
+
+    // BUGFIX #22 — não enviar session_id; enviar apenas config_override com diferenças
+    const diff = {};
+    for (const k of Object.keys(DEFAULT_CONFIG)) {
+        if (currentConfig[k] !== undefined && currentConfig[k] !== DEFAULT_CONFIG[k]) {
+            diff[k] = currentConfig[k];
+        }
+    }
+    const body = { tickers: currentTickers };
+    if (Object.keys(diff).length > 0) body.config_override = diff;
+
     try {
-        // Só envia config_override se o usuário mudou algo do default
-        saveCurrentConfig();
-        let configOverride = null;
-        const diff = {};
-        for (const key of Object.keys(DEFAULT_CONFIG)) {
-            if (currentConfig[key] !== undefined && currentConfig[key] !== DEFAULT_CONFIG[key]) {
-                diff[key] = currentConfig[key];
-            }
-        }
-        if (Object.keys(diff).length > 0) {
-            configOverride = diff;
-        }
-
-        const body = {
-            tickers: currentTickers,
-        };
-        if (configOverride) {
-            body.config_override = configOverride;
-        }
-
         const resp = await fetch(API_BASE + '/run', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
         });
-
         if (resp.status === 409) {
             const err = await resp.json();
-            alert('⚠️ Já existe uma análise em execução!\n\nID: ' + (err.detail?.active_run_id || 'desconhecido'));
+            addLog('⚠️ Já existe uma análise em execução: ' + (err.detail || '409'));
             btn.disabled = false;
             btn.textContent = '▶ Iniciar Análise';
             return;
         }
-
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
+        // BUGFIX #17 — usar data.run_id
         currentRunId = data.run_id;
+        addLog('🚀 Análise iniciada: ' + currentRunId);
 
+        // BUGFIX #20 — mostrar progressContainer via display
         document.getElementById('progressContainer').style.display = 'block';
-        document.getElementById('logsBox').innerHTML = `<div style="color:var(--cyan)">[${new Date().toLocaleTimeString()}] 🚀 Análise iniciada — Run ID: ${currentRunId}</div>`;
-
-        // Start polling
-        if (pollInterval) clearInterval(pollInterval);
-        pollInterval = setInterval(() => pollStatus(currentRunId), 3000);
-
+        startPolling();
     } catch(e) {
-        alert('Erro ao iniciar: ' + e.message);
+        addLog('❌ Erro ao iniciar: ' + e.message);
+        btn.disabled = false;
+        btn.textContent = '▶ Iniciar Análise';
     }
-
-    btn.disabled = false;
-    btn.textContent = '▶ Iniciar Análise';
 }
 
 // ══════════════════════════════════════
-// POLL STATUS
+// POLLING
 // ══════════════════════════════════════
-async function pollStatus(runId) {
+function startPolling() {
+    if (pollInterval) clearInterval(pollInterval);
+    pollInterval = setInterval(pollStatus, 3000);
+    pollStatus();
+}
+
+async function pollStatus() {
+    if (!currentRunId) return;
     try {
-        const resp = await fetch(API_BASE + '/status/' + runId);
+        const resp = await fetch(API_BASE + '/status/' + currentRunId);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
 
-        const fill = document.getElementById('progressFill');
-        const info = document.getElementById('progressInfo');
-        const progress = data.progress || 0;
-
-        fill.style.width = progress + '%';
-        fill.textContent = progress + '%';
-        info.textContent = data.current_ticker ?
-            `Analisando ${data.current_ticker}... (${data.validated || 0} validados, ${data.failed || 0} falharam)` :
-            `Progresso: ${progress}%`;
+        // BUGFIX #2 — usar data.current_ticker como fase; montar texto com data.validated / data.failed
+        const pct = data.progress || 0;
+        document.getElementById('progressFill').style.width = pct + '%';
+        document.getElementById('progressFill').textContent = pct + '%';
+        const phase = data.current_ticker || '...';
+        document.getElementById('progressInfo').textContent =
+            `${phase} — ✅ ${data.validated || 0} validados | ❌ ${data.failed || 0} falhos | ${pct}%`;
 
         // Logs
-        if (data.logs && data.logs.length > 0) {
+        if (data.logs && Array.isArray(data.logs)) {
             const logsBox = document.getElementById('logsBox');
-            logsBox.innerHTML = data.logs.map(l => {
-                let color = 'var(--text2)';
-                if (l.includes('✅')) color = 'var(--green)';
-                else if (l.includes('❌')) color = 'var(--red)';
-                else if (l.includes('⚠️')) color = 'var(--yellow)';
-                else if (l.includes('🚀') || l.includes('🏁')) color = 'var(--cyan)';
-                return `<div style="color:${color}">${l}</div>`;
-            }).join('');
+            logsBox.innerHTML = data.logs.map(l => `<div>${l}</div>`).join('');
             logsBox.scrollTop = logsBox.scrollHeight;
         }
 
-        // Completed
-        if (data.status === 'completed') {
+        if (data.status === 'completed' || data.status === 'failed') {
             clearInterval(pollInterval);
             pollInterval = null;
-            fill.style.width = '100%';
-            fill.textContent = '100%';
-            info.textContent = '✅ Análise concluída!';
-            loadResults(runId);
-        } else if (data.status === 'failed') {
-            clearInterval(pollInterval);
-            pollInterval = null;
-            info.textContent = '❌ Análise falhou';
-            fill.style.background = 'var(--red)';
+            document.getElementById('btnStart').disabled = false;
+            document.getElementById('btnStart').textContent = '▶ Iniciar Análise';
+            if (data.status === 'completed') {
+                addLog('✅ Análise concluída!');
+                loadResults(currentRunId);
+            } else {
+                addLog('❌ Análise falhou.');
+            }
         }
     } catch(e) {
-        console.warn('Poll error:', e);
+        addLog('⚠️ Erro no polling: ' + e.message);
     }
 }
 
@@ -860,309 +865,412 @@ async function pollStatus(runId) {
 async function loadResults(runId) {
     try {
         const resp = await fetch(API_BASE + '/results/' + runId);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
-
-        renderKPIs(data);
-        renderTable(data);
-        renderTradeCards(data);
-        renderCharts(data);
-
+        renderDashboard(data);
     } catch(e) {
-        console.error('Results load error:', e);
+        addLog('⚠️ Erro ao carregar resultados: ' + e.message);
     }
 }
 
-// ══════════════════════════════════════
-// RENDER KPIs
-// ══════════════════════════════════════
-function renderKPIs(data) {
-    const port = data.portfolio || {};
+function renderDashboard(data) {
     const capital = parseFloat(document.getElementById('cfg_capital').value) || 10000;
-    const kellyPct = (port.capital_percent || 0) * 100;
-    const opCapital = capital * (port.capital_percent || 0);
-
-    const kpis = [
-        {label: 'Ativos Validados', value: `${data.validated_count || 0}/${data.total_tickers || 0}`, color: 'var(--green)'},
-        {label: 'Sharpe Portfólio', value: (port.portfolio_sharpe || 0).toFixed(2), color: 'var(--cyan)'},
-        {label: 'Retorno Anual', value: ((port.annual_return_estimate || 0) * 100).toFixed(1) + '%', color: 'var(--green)'},
-        {label: 'Kelly Total', value: kellyPct.toFixed(1) + '%', color: 'var(--yellow)'},
-        {label: 'Capital Operacional', value: 'R$ ' + opCapital.toLocaleString('pt-BR', {minimumFractionDigits:0}), color: 'var(--blue)'},
-        {label: 'Risk of Ruin', value: ((port.risk_of_ruin || 0) * 100).toFixed(1) + '%', color: port.risk_of_ruin > 0.05 ? 'var(--red)' : 'var(--green)'},
-        {label: 'Trades/Ano', value: (port.total_trades_per_year || 0).toLocaleString(), color: 'var(--purple)'},
-        {label: 'Duração', value: (data.duration_seconds || 0).toFixed(1) + 's', color: 'var(--text2)'}
-    ];
-
-    document.getElementById('kpiGrid').innerHTML = kpis.map(k => `
-        <div class="kpi-card">
-            <div class="kpi-label">${k.label}</div>
-            <div class="kpi-value" style="color:${k.color}">${k.value}</div>
-        </div>
-    `).join('');
-}
-
-// ══════════════════════════════════════
-// RENDER TABLE
-// ══════════════════════════════════════
-function renderTable(data) {
-    const tbody = document.getElementById('assetTableBody');
     const assets = data.assets || {};
-    const port = data.portfolio || {};
-    const capital = parseFloat(document.getElementById('cfg_capital').value) || 10000;
-    const opCapital = capital * (port.capital_percent || 0);
+    const portfolio = data.portfolio || {};
+    const weights = portfolio.weights || {};
+    const individualKelly = portfolio.individual_kelly || {};
+    const risk = data.risk || {};
     const tickers = Object.keys(assets);
 
-    if (tickers.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="13" style="color:var(--text3);padding:20px;">Nenhum ativo validado nesta análise</td></tr>';
-        return;
-    }
+    // BUGFIX #3 — usar data.validated_assets (ou contar tickers)
+    const validatedCount = data.validated_assets || tickers.length;
+    // BUGFIX #4 — usar data.total_assets
+    const totalAssets = data.total_assets || 0;
 
-    tbody.innerHTML = tickers.map((ticker, idx) => {
-        const a = assets[ticker];
-        const weight = a.weight || (1 / tickers.length);
-        const allocated = opCapital * weight;
-        const sharpeBadge = a.sharpe >= 2 ? 'badge-green' : a.sharpe >= 1 ? 'badge-blue' : a.sharpe >= 0 ? 'badge-yellow' : 'badge-red';
+    // BUGFIX #6 — annual_return_est (campo real do backend)
+    const annualReturn = data.annual_return_est || 0;
+    // BUGFIX #7 — risk_of_ruin vem de data.risk.risk_of_ruin
+    const riskOfRuin = risk.risk_of_ruin != null ? risk.risk_of_ruin : 0;
+    // BUGFIX #8 — total kelly vem de portfolio.kelly_total
+    const kellyTotal = portfolio.kelly_total || 0;
+    // BUGFIX #9 — trades_per_year vem de data.trades_per_year
+    const tradesPerYear = data.trades_per_year || 0;
+    // BUGFIX #10 — custo round-trip do config usado
+    const costRT = (data.config_used && data.config_used.cost_round_trip) || currentConfig.cost_round_trip || 0.00325;
 
-        return `<tr>
-            <td>${idx + 1}</td>
-            <td style="font-weight:700;color:var(--cyan)">${ticker.replace('.SA','')}</td>
+    // BUGFIX #16 — calcular projeções no frontend
+    const capitalAlocado = capital * kellyTotal;
+    const retornoAnualR = capitalAlocado * annualReturn;
+    const retornoMensalR = retornoAnualR / 12;
+    const custoAnual = tradesPerYear * costRT * capital * kellyTotal;
+    const capitalSugerido = kellyTotal > 0 ? (1000 / (annualReturn * kellyTotal || 1)) : 0;
+
+    // KPIs
+    const kpiGrid = document.getElementById('kpiGrid');
+    kpiGrid.innerHTML = `
+        <div class="kpi-card">
+            <div class="kpi-label">Ativos Validados</div>
+            <div class="kpi-value" style="color:var(--green)">${validatedCount}</div>
+            <div class="kpi-sub">de ${totalAssets} analisados</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Retorno Anual Est.</div>
+            <div class="kpi-value" style="color:${annualReturn >= 0 ? 'var(--green)' : 'var(--red)'}">${(annualReturn * 100).toFixed(2)}%</div>
+            <div class="kpi-sub">${formatBRL(retornoAnualR)}/ano</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Risco de Ruína</div>
+            <div class="kpi-value" style="color:${riskOfRuin < 0.05 ? 'var(--green)' : 'var(--red)'}">${(riskOfRuin * 100).toFixed(2)}%</div>
+            <div class="kpi-sub">${risk.ruin_count || 0}/${risk.total_simulations || 0} sims</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Kelly Total</div>
+            <div class="kpi-value" style="color:var(--cyan)">${(kellyTotal * 100).toFixed(1)}%</div>
+            <div class="kpi-sub">${formatBRL(capitalAlocado)} alocado</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Trades/Ano</div>
+            <div class="kpi-value" style="color:var(--purple)">${tradesPerYear.toLocaleString('pt-BR')}</div>
+            <div class="kpi-sub">Custo est: ${formatBRL(custoAnual)}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Sharpe Portfólio</div>
+            <div class="kpi-value" style="color:var(--yellow)">${(portfolio.portfolio_sharpe || 0).toFixed(2)}</div>
+            <div class="kpi-sub">Out-of-sample</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Retorno Mensal Est.</div>
+            <div class="kpi-value" style="color:var(--green)">${formatBRL(retornoMensalR)}</div>
+            <div class="kpi-sub">sobre ${formatBRL(capital)}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Capital Sugerido</div>
+            <div class="kpi-value" style="color:var(--cyan)">${formatBRL(capitalSugerido)}</div>
+            <div class="kpi-sub">para R$1k/mês</div>
+        </div>
+    `;
+
+    // BUGFIX #15 — tabela de ativos com campos corretos do backend
+    const tbody = document.getElementById('assetTableBody');
+    tbody.innerHTML = '';
+    tickers.forEach((t, i) => {
+        const a = assets[t];
+        // BUGFIX #11 — peso vem de portfolio.weights
+        const weight = weights[t] || 0;
+        const valorAloc = capital * kellyTotal * weight;
+        // BUGFIX #12 — prob_profitable vem de a.mc.prob_profitable
+        const probProfit = a.mc ? a.mc.prob_profitable : 0;
+        // BUGFIX #13 — sharpe vem de a.sharpe ou a.sharpe_oos
+        const sharpe = a.sharpe_oos != null ? a.sharpe_oos : (a.sharpe || 0);
+        // BUGFIX #14 — max_drawdown
+        const maxDD = a.max_drawdown || 0;
+        const growth = a.mc ? a.mc.expected_growth : 0;
+        const wfText = `${a.windows_passed || 0}/${a.windows_total || 0}`;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${i + 1}</td>
+            <td><strong>${t.replace('.SA','')}</strong></td>
             <td>${(weight * 100).toFixed(1)}%</td>
-            <td>R$ ${allocated.toFixed(0)}</td>
-            <td><span class="badge ${sharpeBadge}">${a.sharpe?.toFixed(3) || '—'}</span></td>
-            <td>${a.profit_factor?.toFixed(2) || '—'}</td>
+            <td>${formatBRL(valorAloc)}</td>
+            <td style="color:${sharpe >= 1 ? 'var(--green)' : (sharpe >= 0 ? 'var(--yellow)' : 'var(--red)')}">${sharpe.toFixed(2)}</td>
+            <td>${(a.profit_factor || 0).toFixed(2)}</td>
             <td>${((a.win_rate || 0) * 100).toFixed(1)}%</td>
             <td>${a.total_trades || 0}</td>
             <td>${((a.avg_trade || 0) * 100).toFixed(2)}%</td>
-            <td style="color:var(--red)">${((a.max_drawdown || 0) * 100).toFixed(1)}%</td>
-            <td>${((a.wf_score || 0) * 100).toFixed(0)}%</td>
-            <td>${((a.prob_profit || 0) * 100).toFixed(0)}%</td>
-            <td style="color:var(--green)">${a.growth?.toFixed(2) || '—'}x</td>
-        </tr>`;
-    }).join('');
+            <td style="color:var(--red)">${(maxDD * 100).toFixed(1)}%</td>
+            <td><span class="badge ${a.windows_passed >= (a.windows_total || 1) ? 'badge-green' : 'badge-yellow'}">${wfText}</span></td>
+            <td>${(probProfit * 100).toFixed(0)}%</td>
+            <td style="color:var(--green)">${growth.toFixed(2)}x</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    // Charts
+    renderCharts(tickers, assets, weights, portfolio);
+
+    // Day Trade Cards
+    renderTradeCards(tickers, assets, weights, capital, kellyTotal, costRT);
 }
 
 // ══════════════════════════════════════
-// RENDER TRADE CARDS
+// CHARTS
 // ══════════════════════════════════════
-function getNextBusinessDay() {
-    const d = new Date();
-    d.setDate(d.getDate() + 1);
-    while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
-    return d;
-}
+function renderCharts(tickers, assets, weights, portfolio) {
+    const labels = tickers.map(t => t.replace('.SA', ''));
+    const colors = ['#06b6d4','#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#ef4444','#6366f1','#14b8a6','#f97316','#a855f7','#22d3ee','#84cc16'];
 
-function formatDateBR(d) {
-    return d.toLocaleDateString('pt-BR', {weekday:'long', day:'2-digit', month:'2-digit', year:'numeric'});
-}
-
-function getTier(sharpe, pf, wf) {
-    if (sharpe >= 1.5 && pf >= 2 && wf >= 0.75) return {tier: 1, label: 'TIER 1', color: 'var(--green)', cls: 'tier1'};
-    if (sharpe >= 0.5 && pf >= 1.3 && wf >= 0.5) return {tier: 2, label: 'TIER 2', color: 'var(--yellow)', cls: 'tier2'};
-    return {tier: 3, label: 'TIER 3', color: 'var(--red)', cls: 'tier3'};
-}
-
-function renderTradeCards(data) {
-    const assets = data.assets || {};
-    const port = data.portfolio || {};
-    const capital = parseFloat(document.getElementById('cfg_capital').value) || 10000;
-    const opCapital = capital * (port.capital_percent || 0);
-    const tickers = Object.keys(assets);
-
-    if (tickers.length === 0) {
-        document.getElementById('tradeCardsSection').style.display = 'none';
-        return;
-    }
-
-    document.getElementById('tradeCardsSection').style.display = 'block';
-    const nextDay = getNextBusinessDay();
-    document.getElementById('tradeDate').textContent = formatDateBR(nextDay);
-
-    const grid = document.getElementById('tradeCardsGrid');
-    grid.innerHTML = tickers.map(ticker => {
-        const a = assets[ticker];
-        const info = ASSET_INFO[ticker] || {name: ticker, price: 0, atr: 0};
-        const tier = getTier(a.sharpe || 0, a.profit_factor || 0, a.wf_score || 0);
-        const weight = a.weight || (1 / tickers.length);
-        const allocated = opCapital * weight;
-
-        const entry = info.price;
-        const tp = entry + 2 * info.atr;
-        const sl = entry - 1.5 * info.atr;
-        const qty = entry > 0 ? Math.floor(allocated / entry) : 0;
-        const risk = qty * (entry - sl);
-        const target = qty * (tp - entry);
-        const riskPct = entry > 0 ? ((entry - sl) / entry * 100) : 0;
-        const tpPct = entry > 0 ? ((tp - entry) / entry * 100) : 0;
-
-        return `<div class="trade-card ${tier.cls}">
-            <div class="trade-card-header">
-                <div>
-                    <div class="trade-card-ticker" style="color:${tier.color}">${ticker.replace('.SA','')}</div>
-                    <div style="font-size:0.7rem;color:var(--text3)">${info.name}</div>
-                </div>
-                <span class="trade-card-tier badge" style="background:${tier.color}20;color:${tier.color}">${tier.label}</span>
-            </div>
-
-            <div class="trade-visual">
-                <div class="trade-visual-line tp"></div>
-                <div class="trade-visual-label" style="top:6%;color:var(--green)">TP R$ ${tp.toFixed(2)} (+${tpPct.toFixed(1)}%)</div>
-                <div class="trade-visual-line entry" style="border-top:1px dashed var(--cyan)"></div>
-                <div class="trade-visual-label" style="top:36%;color:var(--cyan)">Entrada R$ ${entry.toFixed(2)}</div>
-                <div class="trade-visual-line sl"></div>
-                <div class="trade-visual-label" style="top:71%;color:var(--red)">SL R$ ${sl.toFixed(2)} (-${riskPct.toFixed(1)}%)</div>
-            </div>
-
-            <div class="trade-card-prices">
-                <div class="trade-price-row"><span class="trade-price-label">Quantidade</span><span class="trade-price-value">${qty} ações</span></div>
-                <div class="trade-price-row"><span class="trade-price-label">Valor Alocado</span><span class="trade-price-value">R$ ${allocated.toFixed(0)}</span></div>
-                <div class="trade-price-row"><span class="trade-price-label">🎯 Lucro potencial</span><span class="trade-price-value trade-tp">+R$ ${target.toFixed(2)}</span></div>
-                <div class="trade-price-row"><span class="trade-price-label">🛑 Risco máximo</span><span class="trade-price-value trade-sl">-R$ ${risk.toFixed(2)}</span></div>
-                <div class="trade-price-row"><span class="trade-price-label">⏰ Saída forçada</span><span class="trade-price-value trade-exit">16:55</span></div>
-            </div>
-
-            <div class="trade-metrics">
-                <div class="trade-metric"><div class="trade-metric-label">Sharpe</div><div class="trade-metric-value" style="color:${tier.color}">${(a.sharpe || 0).toFixed(2)}</div></div>
-                <div class="trade-metric"><div class="trade-metric-label">PF</div><div class="trade-metric-value">${(a.profit_factor || 0).toFixed(2)}</div></div>
-                <div class="trade-metric"><div class="trade-metric-label">Win Rate</div><div class="trade-metric-value">${((a.win_rate || 0) * 100).toFixed(1)}%</div></div>
-            </div>
-        </div>`;
-    }).join('');
-}
-
-// ══════════════════════════════════════
-// RENDER CHARTS
-// ══════════════════════════════════════
-function renderCharts(data) {
-    const assets = data.assets || {};
-    const tickers = Object.keys(assets);
-    const labels = tickers.map(t => t.replace('.SA',''));
-
-    // Destroy old charts
-    for (const key of Object.keys(chartInstances)) {
-        if (chartInstances[key]) chartInstances[key].destroy();
-    }
-
-    if (tickers.length === 0) return;
-
-    const colors = ['#06b6d4','#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#ef4444','#6366f1','#14b8a6','#f97316','#84cc16','#a855f7','#e11d48'];
-
-    // Allocation Chart (Doughnut)
-    chartInstances.alloc = new Chart(document.getElementById('chartAlloc'), {
+    // Allocation Pie
+    if (chartInstances.alloc) chartInstances.alloc.destroy();
+    const allocCtx = document.getElementById('chartAlloc').getContext('2d');
+    chartInstances.alloc = new Chart(allocCtx, {
         type: 'doughnut',
         data: {
             labels: labels,
             datasets: [{
-                data: tickers.map(t => ((assets[t].weight || 0) * 100)),
+                data: tickers.map(t => ((weights[t] || 0) * 100).toFixed(1)),
                 backgroundColor: colors.slice(0, tickers.length),
                 borderWidth: 0
             }]
         },
-        options: { responsive: true, plugins: { legend: { position: 'right', labels: { color: '#94a3b8', font: {size: 10} } } } }
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 10 } } } }
+        }
     });
 
-    // Sharpe Chart (Bar)
-    chartInstances.sharpe = new Chart(document.getElementById('chartSharpe'), {
+    // Sharpe Bar
+    if (chartInstances.sharpe) chartInstances.sharpe.destroy();
+    const sharpeCtx = document.getElementById('chartSharpe').getContext('2d');
+    const sharpeVals = tickers.map(t => assets[t].sharpe_oos || assets[t].sharpe || 0);
+    chartInstances.sharpe = new Chart(sharpeCtx, {
         type: 'bar',
         data: {
             labels: labels,
             datasets: [{
-                label: 'Sharpe',
-                data: tickers.map(t => assets[t].sharpe || 0),
-                backgroundColor: tickers.map(t => (assets[t].sharpe || 0) >= 1.5 ? '#10b981' : (assets[t].sharpe || 0) >= 0.5 ? '#f59e0b' : '#ef4444'),
+                label: 'Sharpe OOS',
+                data: sharpeVals,
+                backgroundColor: sharpeVals.map(v => v >= 1 ? '#10b981' : (v >= 0 ? '#f59e0b' : '#ef4444')),
                 borderRadius: 4
             }]
         },
-        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { ticks: {color:'#94a3b8'}, grid: {color:'#1a1f35'} }, x: { ticks: {color:'#94a3b8', font:{size:9}}, grid: {display:false} } } }
+        options: {
+            responsive: true,
+            scales: {
+                x: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { display: false } },
+                y: { ticks: { color: '#64748b' }, grid: { color: '#1a1f35' } }
+            },
+            plugins: { legend: { display: false } }
+        }
     });
 
-    // Max DD Chart (Bar)
-    chartInstances.dd = new Chart(document.getElementById('chartDD'), {
+    // Max DD Bar
+    if (chartInstances.dd) chartInstances.dd.destroy();
+    const ddCtx = document.getElementById('chartDD').getContext('2d');
+    chartInstances.dd = new Chart(ddCtx, {
         type: 'bar',
         data: {
             labels: labels,
             datasets: [{
-                label: 'Max DD %',
-                data: tickers.map(t => ((assets[t].max_drawdown || 0) * 100)),
-                backgroundColor: tickers.map(t => (assets[t].max_drawdown || 0) > 0.5 ? '#ef4444' : (assets[t].max_drawdown || 0) > 0.3 ? '#f59e0b' : '#10b981'),
+                label: 'Max Drawdown',
+                data: tickers.map(t => ((assets[t].max_drawdown || 0) * 100).toFixed(1)),
+                backgroundColor: '#ef4444',
                 borderRadius: 4
             }]
         },
-        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { ticks: {color:'#94a3b8'}, grid: {color:'#1a1f35'} }, x: { ticks: {color:'#94a3b8', font:{size:9}}, grid: {display:false} } } }
+        options: {
+            responsive: true,
+            scales: {
+                x: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { display: false } },
+                y: { ticks: { color: '#64748b' }, grid: { color: '#1a1f35' } }
+            },
+            plugins: { legend: { display: false } }
+        }
     });
 
-    // Monte Carlo Growth Chart
-    chartInstances.mc = new Chart(document.getElementById('chartMC'), {
+    // Monte Carlo Growth Bar
+    if (chartInstances.mc) chartInstances.mc.destroy();
+    const mcCtx = document.getElementById('chartMC').getContext('2d');
+    chartInstances.mc = new Chart(mcCtx, {
         type: 'bar',
         data: {
             labels: labels,
-            datasets: [{
-                label: 'Growth',
-                data: tickers.map(t => assets[t].growth || 1),
-                backgroundColor: tickers.map(t => (assets[t].growth || 1) > 2 ? '#10b981' : (assets[t].growth || 1) > 1 ? '#3b82f6' : '#ef4444'),
-                borderRadius: 4
-            }]
+            datasets: [
+                {
+                    label: 'Worst Case (P5)',
+                    data: tickers.map(t => assets[t].mc ? assets[t].mc.worst_case : 0),
+                    backgroundColor: '#ef444480', borderRadius: 4
+                },
+                {
+                    label: 'Expected Growth',
+                    data: tickers.map(t => assets[t].mc ? assets[t].mc.expected_growth : 0),
+                    backgroundColor: '#10b981', borderRadius: 4
+                },
+                {
+                    label: 'Best Case',
+                    data: tickers.map(t => assets[t].mc ? assets[t].mc.best_case : 0),
+                    backgroundColor: '#3b82f680', borderRadius: 4
+                }
+            ]
         },
-        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { ticks: {color:'#94a3b8'}, grid: {color:'#1a1f35'} }, x: { ticks: {color:'#94a3b8', font:{size:9}}, grid: {display:false} } } }
+        options: {
+            responsive: true,
+            scales: {
+                x: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { display: false } },
+                y: { ticks: { color: '#64748b' }, grid: { color: '#1a1f35' } }
+            },
+            plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } }
+        }
     });
 }
 
 // ══════════════════════════════════════
-// LOAD HISTORY
+// DAY TRADE CARDS
 // ══════════════════════════════════════
+function renderTradeCards(tickers, assets, weights, capital, kellyTotal, costRT) {
+    if (tickers.length === 0) {
+        document.getElementById('tradeCardsSection').style.display = 'none';
+        return;
+    }
+    document.getElementById('tradeCardsSection').style.display = 'block';
+    document.getElementById('tradeDate').textContent = new Date().toLocaleDateString('pt-BR');
+
+    const grid = document.getElementById('tradeCardsGrid');
+    grid.innerHTML = '';
+
+    // Sort by Sharpe descending
+    const sorted = [...tickers].sort((a, b) => {
+        const sa = assets[a].sharpe_oos || assets[a].sharpe || 0;
+        const sb = assets[b].sharpe_oos || assets[b].sharpe || 0;
+        return sb - sa;
+    });
+
+    sorted.forEach((t, idx) => {
+        const a = assets[t];
+        const info = ASSET_INFO[t] || { name: t, price: 0, atr: 0 };
+        const weight = weights[t] || 0;
+        const kelly = a.mc ? a.mc.prob_profitable : 0;
+        const sharpe = a.sharpe_oos || a.sharpe || 0;
+
+        // Tier
+        let tier, tierLabel, tierColor;
+        if (sharpe >= 1.5) { tier = 'tier1'; tierLabel = 'TIER 1'; tierColor = 'var(--green)'; }
+        else if (sharpe >= 0.5) { tier = 'tier2'; tierLabel = 'TIER 2'; tierColor = 'var(--yellow)'; }
+        else { tier = 'tier3'; tierLabel = 'TIER 3'; tierColor = 'var(--red)'; }
+
+        const price = info.price;
+        const atr = info.atr;
+        const tp = price + atr * 1.5;
+        const sl = price - atr * 1.0;
+        const riskReward = atr > 0 ? ((tp - price) / (price - sl)).toFixed(2) : '—';
+
+        const capitalTrade = capital * kellyTotal * weight;
+        const qty = price > 0 ? Math.floor(capitalTrade / price) : 0;
+
+        const card = document.createElement('div');
+        card.className = `trade-card ${tier}`;
+        card.innerHTML = `
+            <div class="trade-card-header">
+                <div>
+                    <div class="trade-card-ticker">${t.replace('.SA','')}</div>
+                    <div style="font-size:0.7rem;color:var(--text3)">${info.name}</div>
+                </div>
+                <span class="trade-card-tier" style="background:${tierColor}20;color:${tierColor}">${tierLabel}</span>
+            </div>
+            <div class="trade-visual">
+                <div class="trade-visual-line tp"></div>
+                <div class="trade-visual-label" style="top:7%;color:var(--green)">TP ${formatBRL(tp)}</div>
+                <div class="trade-visual-line entry"></div>
+                <div class="trade-visual-label" style="top:37%;color:var(--cyan)">ENTRY ${formatBRL(price)}</div>
+                <div class="trade-visual-line sl"></div>
+                <div class="trade-visual-label" style="top:72%;color:var(--red)">SL ${formatBRL(sl)}</div>
+            </div>
+            <div class="trade-card-prices">
+                <div class="trade-price-row"><span class="trade-price-label">Take Profit</span><span class="trade-price-value trade-tp">${formatBRL(tp)}</span></div>
+                <div class="trade-price-row"><span class="trade-price-label">Entrada (abertura)</span><span class="trade-price-value trade-entry">${formatBRL(price)}</span></div>
+                <div class="trade-price-row"><span class="trade-price-label">Stop Loss</span><span class="trade-price-value trade-sl">${formatBRL(sl)}</span></div>
+                <div class="trade-price-row"><span class="trade-price-label">Saída 16:55</span><span class="trade-price-value trade-exit">${formatBRL(price)}</span></div>
+            </div>
+            <div class="trade-metrics">
+                <div class="trade-metric"><div class="trade-metric-label">Qtd</div><div class="trade-metric-value">${qty}</div></div>
+                <div class="trade-metric"><div class="trade-metric-label">R:R</div><div class="trade-metric-value">${riskReward}</div></div>
+                <div class="trade-metric"><div class="trade-metric-label">Capital</div><div class="trade-metric-value">${formatBRL(capitalTrade)}</div></div>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+// ══════════════════════════════════════
+// LOGS
+// ══════════════════════════════════════
+function addLog(msg) {
+    const box = document.getElementById('logsBox');
+    const time = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    if (box.textContent === 'Nenhum log ainda.') box.innerHTML = '';
+    box.innerHTML += `<div>[${time}] ${msg}</div>`;
+    box.scrollTop = box.scrollHeight;
+}
+
+// ══════════════════════════════════════
+// HISTORY
+// ══════════════════════════════════════
+// BUGFIX #17 — usar run.run_id; adaptar ao formato real do /history
 async function loadHistory() {
-    const div = document.getElementById('historyInfo');
-    div.innerHTML = '<span style="color:var(--cyan)">Carregando...</span>';
+    const el = document.getElementById('historyInfo');
+    el.innerHTML = '<span style="color:var(--cyan)">Carregando...</span>';
     try {
         const resp = await fetch(API_BASE + '/history');
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
-        const runs = data.runs || [];
-
-        if (runs.length === 0) {
-            div.innerHTML = 'Nenhuma análise no histórico.';
+        // Backend retorna { runs: [...] }
+        const runs = data.runs || data || [];
+        if (!Array.isArray(runs) || runs.length === 0) {
+            el.innerHTML = 'Nenhum histórico encontrado.';
             return;
         }
-
-        let html = '<table style="width:100%;font-size:0.8rem;"><thead><tr><th>Data</th><th>Status</th><th>Validados</th><th>Duração</th><th>Ação</th></tr></thead><tbody>';
-        for (const r of runs) {
-            const ts = r.timestamp ? new Date(r.timestamp).toLocaleString('pt-BR') : '—';
-            const statusBadge = r.status === 'completed' ? 'badge-green' : 'badge-red';
+        let html = '<table><thead><tr><th>Data</th><th>Duração</th><th>Validados</th><th>Total</th><th>Sharpe</th><th>Status</th><th>Ação</th></tr></thead><tbody>';
+        runs.forEach(run => {
+            const ts = run.timestamp ? new Date(run.timestamp).toLocaleString('pt-BR') : '—';
+            const dur = run.duration ? run.duration.toFixed(1) + 's' : (run.duration_seconds ? run.duration_seconds.toFixed(1) + 's' : '—');
+            const validated = run.validated != null ? run.validated : (run.validated_count || 0);
+            const total = run.total_assets || '?';
+            const sharpe = run.portfolio_sharpe != null ? run.portfolio_sharpe.toFixed(2) : '—';
+            const status = run.status || '?';
+            const statusBadge = status === 'completed' ? 'badge-green' : (status === 'failed' ? 'badge-red' : 'badge-yellow');
+            // BUGFIX #17 — usar run.run_id
+            const rid = run.run_id || run.id || '';
             html += `<tr>
-                <td>${ts}</td>
-                <td><span class="badge ${statusBadge}">${r.status}</span></td>
-                <td>${r.validated || 0}</td>
-                <td>${(r.duration || 0).toFixed(1)}s</td>
-                <td>${r.validated > 0 ? `<button class="btn btn-secondary" style="padding:4px 8px;font-size:0.7rem;" onclick="loadResults('${r.run_id}')">📊 Ver</button>` : '—'}</td>
+                <td>${ts}</td><td>${dur}</td><td>${validated}</td><td>${total}</td><td>${sharpe}</td>
+                <td><span class="badge ${statusBadge}">${status}</span></td>
+                <td>${rid && status === 'completed' ? `<button class="btn btn-secondary" style="padding:4px 8px;font-size:0.7rem" onclick="loadResults('${rid}')">Ver</button>` : '—'}</td>
             </tr>`;
-        }
+        });
         html += '</tbody></table>';
-        div.innerHTML = html;
+        el.innerHTML = html;
     } catch(e) {
-        div.innerHTML = 'Erro ao carregar: ' + e.message;
+        el.innerHTML = '❌ Erro ao carregar histórico: ' + e.message;
     }
 }
 
 // ══════════════════════════════════════
-// LOAD SCHEDULER
+// SCHEDULER
 // ══════════════════════════════════════
+// BUGFIX #18 — adaptar ao formato real do /scheduler: { scheduler: {...}, config: {...} }
 async function loadScheduler() {
-    const div = document.getElementById('schedulerInfo');
+    const el = document.getElementById('schedulerInfo');
+    el.innerHTML = '<span style="color:var(--cyan)">Carregando...</span>';
     try {
         const resp = await fetch(API_BASE + '/scheduler');
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
-        const s = data.scheduler || {};
-        const c = data.config || {};
+        // data = { scheduler: { running, last_daily, last_retrain, next_daily, next_retrain }, config: { daily_time, retrain_day, retrain_hour, retrain_enabled } }
+        const sched = data.scheduler || {};
+        const cfg = data.config || {};
 
-        div.innerHTML = `
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                <div><strong>Status:</strong> ${s.running ? '🟢 Ativo' : '🔴 Parado'}</div>
-                <div><strong>Análise diária:</strong> ${c.daily_time || '19:00 BRT'}</div>
-                <div><strong>Última daily:</strong> ${s.last_daily || 'Nunca'}</div>
-                <div><strong>Próxima daily:</strong> ${s.next_daily ? new Date(s.next_daily).toLocaleString('pt-BR') : '—'}</div>
-                <div><strong>Último retrain:</strong> ${s.last_retrain || 'Nunca'}</div>
-                <div><strong>Próximo retrain:</strong> ${s.next_retrain ? new Date(s.next_retrain).toLocaleString('pt-BR') : '—'}</div>
+        const running = sched.running ? '🟢 Ativo' : '🔴 Inativo';
+        const nextDaily = sched.next_daily ? new Date(sched.next_daily).toLocaleString('pt-BR') : '—';
+        const nextRetrain = sched.next_retrain ? new Date(sched.next_retrain).toLocaleString('pt-BR') : '—';
+        const lastDaily = sched.last_daily ? new Date(sched.last_daily).toLocaleString('pt-BR') : 'Nenhuma';
+        const lastRetrain = sched.last_retrain ? new Date(sched.last_retrain).toLocaleString('pt-BR') : 'Nenhum';
+        const dailyTime = cfg.daily_time || '19:00 BRT';
+        const retrainDay = cfg.retrain_day || 'sunday';
+        const retrainHour = cfg.retrain_hour != null ? cfg.retrain_hour : 3;
+        const retrainEnabled = cfg.retrain_enabled ? 'Sim' : 'Não';
+
+        el.innerHTML = `
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+                <div><strong>Status:</strong> ${running}</div>
+                <div><strong>Diário:</strong> ${dailyTime}</div>
+                <div><strong>Retrain:</strong> ${retrainEnabled} (${retrainDay} ${retrainHour}h)</div>
+                <div><strong>Próx. Diário:</strong> ${nextDaily}</div>
+                <div><strong>Próx. Retrain:</strong> ${nextRetrain}</div>
+                <div><strong>Último Diário:</strong> ${lastDaily}</div>
+                <div><strong>Último Retrain:</strong> ${lastRetrain}</div>
             </div>
         `;
     } catch(e) {
-        div.innerHTML = 'Erro: ' + e.message;
+        el.innerHTML = '❌ Erro ao carregar scheduler: ' + e.message;
     }
 }
 
@@ -1170,109 +1278,82 @@ async function loadScheduler() {
 // TUTORIAL
 // ══════════════════════════════════════
 function renderTutorial() {
-    document.getElementById('tutorialContent').innerHTML = `
+    const el = document.getElementById('tutorialContent');
+    el.innerHTML = `
         <div class="tutorial-section">
-            <h3>1. Entendendo os Dados da Tabela</h3>
-            <p>Cada linha da tabela representa um ativo que passou na validação Walk-Forward. Os campos são:</p>
-            <div class="tutorial-box">
-                <strong>Sharpe</strong> — Retorno ajustado ao risco. Acima de 1.5 = excelente, 0.5-1.5 = bom, abaixo de 0.5 = fraco.<br>
-                <strong>PF (Profit Factor)</strong> — Lucro bruto ÷ Prejuízo bruto. Acima de 2.0 = ótimo, 1.3-2.0 = aceitável.<br>
-                <strong>WR (Win Rate)</strong> — % de trades vencedores.<br>
-                <strong>Trades</strong> — Total de operações simuladas no backtest walk-forward.<br>
-                <strong>Avg Trade</strong> — Retorno médio por trade (já descontando custos).<br>
-                <strong>Max DD</strong> — Maior queda do pico ao vale da equity. Menor = melhor.<br>
-                <strong>WF</strong> — % de janelas walk-forward que foram lucrativas. 100% = todas lucrativas.<br>
-                <strong>P(Lucro)</strong> — Probabilidade de lucro nas simulações Monte Carlo.<br>
-                <strong>Growth</strong> — Multiplicador do capital no período testado (ex: 2.5x = 150% de lucro).
-            </div>
+            <h3>1. Entendendo os Dados</h3>
+            <p>O sistema analisa ativos da B3 usando Machine Learning (Random Forest, XGBoost, LightGBM) com validação Walk-Forward. Cada ativo passa por:</p>
+            <ul>
+                <li><strong>Feature Engineering:</strong> 50+ indicadores técnicos (RSI, MACD, Bollinger, médias, volume, etc.)</li>
+                <li><strong>Detecção de Regime:</strong> Hidden Markov Model identifica Bull/Bear/Sideways</li>
+                <li><strong>Walk-Forward:</strong> treino/teste em janelas deslizantes para evitar overfitting</li>
+                <li><strong>Monte Carlo:</strong> milhares de simulações para estimar cenários futuros</li>
+                <li><strong>Kelly Criterion:</strong> dimensionamento ótimo de posição baseado em probabilidade e payoff</li>
+            </ul>
         </div>
 
         <div class="tutorial-section">
-            <h3>2. Sistema de Classificação (Tiers)</h3>
-            <div class="tutorial-box">
-                <strong style="color:var(--green)">TIER 1</strong> — Sharpe ≥ 1.5 + PF ≥ 2.0 + WF ≥ 75%. Prioridade máxima.<br>
-                <strong style="color:var(--yellow)">TIER 2</strong> — Sharpe ≥ 0.5 + PF ≥ 1.3 + WF ≥ 50%. Operável com cautela.<br>
-                <strong style="color:var(--red)">TIER 3</strong> — Restante. Evitar ou usar posição mínima.
-            </div>
+            <h3>2. Lendo os KPIs</h3>
+            <p>No dashboard, os KPIs mostram:</p>
+            <ul>
+                <li><strong>Ativos Validados:</strong> quantos passaram no Walk-Forward (mínimo de janelas lucrativas)</li>
+                <li><strong>Retorno Anual Est.:</strong> retorno esperado do portfólio baseado no backtest</li>
+                <li><strong>Risco de Ruína:</strong> probabilidade de perder 75%+ do capital (idealmente &lt; 5%)</li>
+                <li><strong>Kelly Total:</strong> % do capital que deve ser alocado (Half-Kelly para segurança)</li>
+                <li><strong>Sharpe:</strong> retorno ajustado por risco (>1 = bom, >2 = excelente)</li>
+            </ul>
         </div>
 
         <div class="tutorial-section">
-            <h3>3. Cards Day Trade — Entrada, Stop e Take</h3>
-            <p>Cada card mostra os preços calculados para o próximo dia útil:</p>
+            <h3>3. Operando Day Trade</h3>
             <div class="tutorial-box">
-                <strong style="color:var(--cyan)">Entrada</strong> = Preço de abertura do ativo (comprar a mercado na abertura, 10:00).<br>
-                <strong style="color:var(--green)">Take Profit</strong> = Entrada + 2 × ATR(14). Alvo de lucro baseado na volatilidade média de 14 dias.<br>
-                <strong style="color:var(--red)">Stop Loss</strong> = Entrada − 1.5 × ATR(14). Limite de perda.<br>
-                <strong style="color:var(--yellow)">Saída forçada</strong> = 16:55 (5 min antes do fechamento). Se não bateu TP nem SL, sai a mercado.
+                <strong>Regra de Ouro:</strong> Compre na abertura (9:00), coloque TP e SL imediatamente, e saia até 16:55 se nenhum for atingido.
             </div>
+            <p>Para cada ativo validado, o sistema gera um card com:</p>
+            <ul>
+                <li><strong>Entrada:</strong> preço de abertura do dia</li>
+                <li><strong>Take Profit (TP):</strong> entrada + 1.5 × ATR</li>
+                <li><strong>Stop Loss (SL):</strong> entrada − 1.0 × ATR</li>
+                <li><strong>Saída Forçada:</strong> 16:55 — fechar posição independente do resultado</li>
+                <li><strong>Qtd:</strong> número de ações calculado pelo Kelly × peso × capital</li>
+            </ul>
             <div class="tutorial-box warning">
-                ⚠️ <strong>Importante:</strong> Os preços são estimativas. O preço real de abertura pode variar. Ajuste SL e TP proporcionalmente.
+                <strong>Atenção:</strong> Este é um sistema de backtesting/estudo. Resultados passados NÃO garantem resultados futuros. Sempre gerencie risco!
             </div>
         </div>
 
         <div class="tutorial-section">
-            <h3>4. Alocação de Capital (Kelly)</h3>
-            <p>O sistema usa o Kelly Criterion (Half Kelly) para determinar quanto do seu capital deve ser operado:</p>
-            <div class="tutorial-box">
-                <strong>Capital Total</strong> → Ex: R$ 10.000<br>
-                <strong>Kelly Total</strong> → Ex: 24.2% → Capital Operacional = R$ 2.423<br>
-                <strong>Peso por ativo</strong> → Ex: 7.7% → Alocação = R$ 186 por ativo<br>
-                <strong>Quantidade</strong> = Valor alocado ÷ Preço do ativo
-            </div>
+            <h3>4. Tiers de Qualidade</h3>
+            <ul>
+                <li><span style="color:var(--green)">Tier 1 (Sharpe ≥ 1.5):</span> Sinais de alta confiança — priorizar</li>
+                <li><span style="color:var(--yellow)">Tier 2 (Sharpe 0.5–1.5):</span> Sinais moderados — operar com cautela</li>
+                <li><span style="color:var(--red)">Tier 3 (Sharpe &lt; 0.5):</span> Sinais fracos — considerar não operar</li>
+            </ul>
         </div>
 
         <div class="tutorial-section">
-            <h3>5. Operando no MetaTrader 5</h3>
-            <div class="tutorial-box">
-                1. Abra o MT5 da Clear/XP → Conta Demo ou Real<br>
-                2. Na janela de cotações, clique com botão direito → Símbolos → procure o ativo (ex: GGBR4)<br>
-                3. Clique em "Nova Ordem" (F9)<br>
-                4. Tipo: Execução a Mercado<br>
-                5. Volume: quantidade de ações<br>
-                6. Stop Loss: preencha o valor do SL<br>
-                7. Take Profit: preencha o valor do TP<br>
-                8. Clique em "Comprar a Mercado" (BUY)<br>
-                9. Às 16:55, se não executou SL ou TP, feche manualmente
-            </div>
-        </div>
-
-        <div class="tutorial-section">
-            <h3>6. Operando no Home Broker XP/Clear</h3>
-            <div class="tutorial-box">
-                1. Acesse o Home Broker<br>
-                2. Digite o código do ativo (ex: GGBR4F para fracionário)<br>
-                3. Quantidade: número de ações calculado<br>
-                4. Tipo: A Mercado (ou limite no preço de abertura)<br>
-                5. Envie a ordem de COMPRA<br>
-                6. Após executada, crie uma ordem STOP (venda) com:<br>
-                &nbsp;&nbsp;— Preço disparo: valor do Stop Loss<br>
-                &nbsp;&nbsp;— Preço limite: SL − R$ 0.05 (margem)<br>
-                7. Crie uma ordem LIMITE (venda) no preço do Take Profit<br>
-                8. Às 16:55, cancele ordens pendentes e venda a mercado se necessário
-            </div>
-        </div>
-
-        <div class="tutorial-section">
-            <h3>7. Horários B3 (2026)</h3>
-            <div class="tutorial-box">
-                <strong>09:45 - 10:00</strong> — Pré-abertura (leilão). Não operar.<br>
-                <strong>10:00</strong> — Abertura. Enviar ordens de compra.<br>
-                <strong>16:55</strong> — Saída forçada. Fechar posições abertas.<br>
-                <strong>17:00 - 17:25</strong> — Leilão de fechamento.<br>
-                <strong>17:25</strong> — Fechamento do pregão.
-            </div>
-        </div>
-
-        <div class="tutorial-section">
-            <h3>8. Regras de Proteção</h3>
+            <h3>5. Configuração</h3>
+            <p>Na aba Configuração, você pode ajustar:</p>
+            <ul>
+                <li><strong>Capital:</strong> valor total disponível para operações</li>
+                <li><strong>Tickers:</strong> adicionar/remover ativos da B3</li>
+                <li><strong>Walk-Forward:</strong> nº de janelas e critério de aprovação</li>
+                <li><strong>Thresholds:</strong> sensibilidade dos sinais (mais baixo = mais sinais, menos rigoroso)</li>
+                <li><strong>Sessões:</strong> salvar múltiplas configurações para comparar resultados</li>
+            </ul>
             <div class="tutorial-box danger">
-                🛑 <strong>5 Regras de Ouro:</strong><br>
-                1. SEMPRE use Stop Loss. Nunca opere sem.<br>
-                2. Respeite o Kelly — não aloce mais do que o sistema indica.<br>
-                3. Comece na conta DEMO até ter confiança nos sinais.<br>
-                4. NUNCA mova o Stop Loss para baixo (ampliando o risco).<br>
-                5. Opere apenas com dinheiro que pode perder sem afetar sua vida.
+                <strong>Cuidado:</strong> Alterar thresholds muito baixos pode gerar sinais de baixa qualidade. Mantenha signal_threshold ≥ 0.50 e meta_threshold ≥ 0.45.
             </div>
+        </div>
+
+        <div class="tutorial-section">
+            <h3>6. Scheduler Automático</h3>
+            <p>O sistema executa automaticamente:</p>
+            <ul>
+                <li><strong>Análise Diária:</strong> todos os dias às 19:00 BRT (após fechamento do mercado)</li>
+                <li><strong>Retrain Semanal:</strong> domingos às 03:00 — retreina os modelos com dados mais recentes</li>
+            </ul>
+            <p>Os resultados ficam disponíveis no Histórico e podem ser consultados a qualquer momento.</p>
         </div>
     `;
 }
