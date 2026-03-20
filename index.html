@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HALLEY TRADE IA — Dashboard</title>
+    <meta name="description" content="Sistema Quantitativo Autônomo com Machine Learning">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☄️</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <style>
+        /* ============================================================
+           HALLEY TRADE IA — CSS COMPLETO
+           Design: Dark Glassmorphism
+           ============================================================ */
+        :root {
+            --bg-primary: #050a18;
+            --bg-secondary: #0a1128;
+            --bg-card: rgba(15, 23, 55, 0.75);
+            --bg-card-hover: rgba(20, 30, 70, 0.85);
+            --bg-glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(99, 102, 241, 0.15);
+            --border-hover: rgba(99, 102, 241, 0.35);
+            --accent: #6366f1;
+            --accent-light: #818cf8;
+            --accent-glow: rgba(99, 102, 241, 0.25);
+            --green: #10b981;
+            --green-light: #34d399;
+            --green-glow: rgba(16, 185, 129, 0.2);
+            --red: #ef4444;
+            --red-light: #f87171;
+            --red-glow: rgba(239, 68, 68, 0.2);
+            --yellow: #f59e0b;
+            --yellow-light: #fbbf24;
+            --cyan: #06b6d4;
+            --purple: #a855f7;
+            --text: #e2e8f0;
+            --text-muted: #64748b;
+            --text-dim: #475569;
+            --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --font-mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-xs: 6px;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --shadow-glow: 0 0 30px var(--accent-glow);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg-primary);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Fundo animado */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(6, 182, 212, 0.03) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── HEADER ──────────────────────────────── */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(5, 10, 24, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            font-size: 1.8rem;
+            filter: drop-shadow(0 0 8px var(--accent-glow));
+        }
+
+        .logo h1 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--accent-light), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo .version {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            font-weight: 400;
+            margin-left: 0.3rem;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .status-badge {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-online {
+            background: var(--green-glow);
+            color: var(--green-light);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .status-online .status-dot { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+
+        .status-offline {
+            background: var(--red-glow);
+            color: var(--red-light);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .status-offline .status-dot { background: var(--red); }
+
+        .status-loading {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--yellow-light);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        .status-loading .status-dot { background: var(--yellow); animation: pulse 1s infinite; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .clock {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        /* ── CONTAINER ───────────────────────────── */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        /* ── CONTROLS ────────────────────────────── */
+        .controls {
+            display: flex;
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.65rem 1.4rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            letter-spacing: 0.01em;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #4f46e5);
+            color: white;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px var(--accent-glow);
+        }
+        .btn-primary:disabled {
+            background: var(--text-dim);
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+        }
+        .btn-secondary:hover {
+            border-color: var(--border-hover);
+            background: var(--bg-card-hover);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--red), #dc2626);
+            color: white;
+        }
+
+        .phase-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            flex: 1;
+            text-align: right;
+        }
+
+        /* ── PROGRESS BAR ────────────────────────── */
+        .progress-container {
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.4rem;
+            font-size: 0.78rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--cyan), var(--green));
+            border-radius: 3px;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        /* ── GRID LAYOUTS ────────────────────────── */
+        .grid { display: grid; gap: 1.2rem; }
+        .grid-4 { grid-template-columns: repeat(4, 1fr); }
+        .grid-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-1 { grid-template-columns: 1fr; }
+
+        /* ── CARDS ────────────────────────────────── */
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            border-color: var(--border-hover);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .card-header {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 700;
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .card-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
+
+        .card-sub {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-top: 0.4rem;
+        }
+
+        .green { color: var(--green-light); }
+        .red { color: var(--red-light); }
+        .yellow { color: var(--yellow-light); }
+        .cyan { color: var(--cyan); }
+        .purple { color: var(--purple); }
+        .accent { color: var(--accent-light); }
+
+        /* ── SECTIONS ────────────────────────────── */
+        .section {
+            margin-bottom: 1.8rem;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title .icon { font-size: 1.1rem; }
+
+        /* ── LOG BOX ─────────────────────────────── */
+        .log-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            max-height: 350px;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            line-height: 1.7;
+        }
+
+        .log-box::-webkit-scrollbar { width: 6px; }
+        .log-box::-webkit-scrollbar-track { background: transparent; }
+        .log-box::-webkit-scrollbar-thumb { background: var(--text-dim); border-radius: 3px; }
+
+        .log-line { margin: 0; white-space: pre-wrap; word-break: break-all; }
+
+        /* ── TABLE ────────────────────────────────── */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: var(--radius-sm);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+
+        th {
+            padding: 0.8rem 1rem;
+            text-align: left;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            white-space: nowrap;
+        }
+
+        tr:hover td {
+            background: rgba(99, 102, 241, 0.04);
+        }
+
+        .ticker-cell {
+            font-weight: 700;
+            color: var(--accent-light);
+        }
+
+        /* ── CHARTS ──────────────────────────────── */
+        .chart-container {
+            position: relative;
+            height: 320px;
+        }
+
+        /* ── CAPITAL GRID ────────────────────────── */
+        .capital-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.8rem;
+        }
+
+        .capital-card {
+            background: var(--bg-glass);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .capital-card:hover {
+            border-color: var(--green);
+            box-shadow: 0 0 15px var(--green-glow);
+        }
+
+        .capital-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.3rem;
+        }
+
+        .capital-invested {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+        }
+
+        .capital-projected {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--green-light);
+            margin-top: 0.2rem;
+        }
+
+        .capital-profit {
+            font-size: 0.75rem;
+            color: var(--green);
+            margin-top: 0.2rem;
+        }
+
+        /* ── SUGGESTED CAPITAL ────────────────────── */
+        .suggested-box {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(6, 182, 212, 0.05));
+            border: 1px solid var(--accent);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            text-align: center;
+            margin-top: 1.2rem;
+        }
+
+        .suggested-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--green-light), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ── SCHEDULER INFO ──────────────────────── */
+        .scheduler-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 0.8rem;
+        }
+
+        .schedule-card {
+            background: var(--bg-glass);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+        }
+
+        .schedule-card .job-name {
+            font-weight: 700;
+            color: var(--accent-light);
+            font-size: 0.85rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .schedule-card .job-detail {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .schedule-card .job-next {
+            font-size: 0.8rem;
+            color: var(--green-light);
+            font-family: var(--font-mono);
+            margin-top: 0.3rem;
+        }
+
+        /* ── HIDDEN ──────────────────────────────── */
+        .hidden { display: none !important; }
+
+        /* ── RESPONSIVE ──────────────────────────── */
+        @media (max-width: 1200px) {
+            .grid-4 { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .header { padding: 0.8rem 1rem; flex-wrap: wrap; gap: 0.5rem; }
+            .grid-4 { grid-template-columns: 1fr 1fr; }
+            .grid-3, .grid-2 { grid-template-columns: 1fr; }
+            .card-value { font-size: 1.6rem; }
+            .logo h1 { font-size: 1rem; }
+            .controls { flex-direction: column; align-items: stretch; }
+            .phase-text { text-align: left; }
+        }
+
+        @media (max-width: 480px) {
+            .grid-4 { grid-template-columns: 1fr; }
+            .capital-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- HEADER                                                  -->
+<!-- ════════════════════════════════════════════════════════ -->
+<header class="header">
+    <div class="logo">
+        <span class="logo-icon">☄️</span>
+        <div>
+            <h1>HALLEY TRADE IA <span class="version">v3.0</span></h1>
+        </div>
+    </div>
+    <div class="header-right">
+        <span id="clock" class="clock"></span>
+        <div id="statusBadge" class="status-badge status-loading">
+            <span class="status-dot"></span>
+            Verificando...
+        </div>
+    </div>
+</header>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- MAIN CONTENT                                            -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="container">
+
+    <!-- CONTROLES -->
+    <div class="controls">
+        <button id="btnRun" class="btn btn-primary" onclick="startRun()">
+            <span>▶</span> Iniciar Analise
+        </button>
+        <button class="btn btn-secondary" onclick="loadHistory()">
+            <span>📋</span> Historico
+        </button>
+        <button class="btn btn-secondary" onclick="loadScheduler()">
+            <span>📅</span> Scheduler
+        </button>
+        <button class="btn btn-secondary" onclick="forceDaily()">
+            <span>⚡</span> Forcar Diaria
+        </button>
+        <span id="phaseText" class="phase-text"></span>
+    </div>
+
+    <!-- PROGRESS BAR -->
+    <div id="progressContainer" class="progress-container">
+        <div class="progress-info">
+            <span id="progressPhase" style="color: var(--accent-light);"></span>
+            <span id="progressPct" style="color: var(--text-muted);">0%</span>
+        </div>
+        <div class="progress-bar">
+            <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <!-- SCHEDULER INFO -->
+    <div id="schedulerSection" class="section hidden">
+        <div class="section-title">
+            <span class="icon">📅</span> Automacao — Jobs Agendados
+        </div>
+        <div id="schedulerGrid" class="scheduler-grid"></div>
+    </div>
+
+    <!-- LOGS -->
+    <div id="logSection" class="section hidden">
+        <div class="section-title">
+            <span class="icon">📟</span> Logs em Tempo Real
+        </div>
+        <div id="logBox" class="log-box"></div>
+    </div>
+
+    <!-- KPIs -->
+    <div id="kpiSection" class="section hidden">
+        <div class="section-title">
+            <span class="icon">📊</span> Metricas Principais
+        </div>
+        <div class="grid grid-4">
+            <div class="card">
+                <div class="card-header">☄️ Ativos Validados</div>
+                <div id="kpiValidated" class="card-value green">—</div>
+                <div id="kpiTotal" class="card-sub"></div>
+            </div>
+            <div class="card">
+                <div class="card-header">📈 Portfolio Sharpe</div>
+                <div id="kpiSharpe" class="card-value">—</div>
+                <div class="card-sub">Retorno ajustado ao risco</div>
+            </div>
+            <div class="card">
+                <div class="card-header">💰 Retorno Anual Est.</div>
+                <div id="kpiReturn" class="card-value green">—</div>
+                <div class="card-sub">Baseado em Walk-Forward OOS</div>
+            </div>
+            <div class="card">
+                <div class="card-header">☠️ Risco de Ruina</div>
+                <div id="kpiRuin" class="card-value">—</div>
+                <div class="card-sub">Prob. de perder 50% do capital</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPIs EXTRAS -->
+    <div id="kpiExtraSection" class="section hidden">
+        <div class="grid grid-4">
+            <div class="card">
+                <div class="card-header">🎯 Kelly Total</div>
+                <div id="kpiKelly" class="card-value cyan">—</div>
+                <div class="card-sub">Fracao Kelly (50%)</div>
+            </div>
+            <div class="card">
+                <div class="card-header">📊 Trades / Ano</div>
+                <div id="kpiTrades" class="card-value accent">—</div>
+                <div class="card-sub">Total de operacoes estimadas</div>
+            </div>
+            <div class="card">
+                <div class="card-header">⏱️ Duracao</div>
+                <div id="kpiDuration" class="card-value">—</div>
+                <div class="card-sub">Tempo de processamento</div>
+            </div>
+            <div class="card">
+                <div class="card-header">🔧 Custos Modelados</div>
+                <div id="kpiCosts" class="card-value yellow">0.325%</div>
+                <div class="card-sub">Round-trip (emolumentos+corretagem+slippage)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHARTS -->
+    <div id="chartSection" class="section hidden">
+        <div class="grid grid-2">
+            <div class="card">
+                <div class="card-header">🥧 Alocacao do Portfolio (Markowitz)</div>
+                <div class="chart-container">
+                    <canvas id="chartAllocation"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">🎲 Monte Carlo — Prob. de Lucro por Ativo</div>
+                <div class="chart-container">
+                    <canvas id="chartMonteCarlo"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHART EXTRA: SHARPE POR ATIVO -->
+    <div id="chartExtraSection" class="section hidden">
+        <div class="grid grid-2">
+            <div class="card">
+                <div class="card-header">📈 Sharpe OOS por Ativo</div>
+                <div class="chart-container">
+                    <canvas id="chartSharpe"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">📉 Max Drawdown por Ativo</div>
+                <div class="chart-container">
+                    <canvas id="chartDrawdown"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABELA DE ATIVOS -->
+    <div id="assetsSection" class="section hidden">
+        <div class="section-title">
+            <span class="icon">🏆</span> Ativos Validados — Walk-Forward + Monte Carlo
+        </div>
+        <div class="card">
+            <div class="table-wrapper">
+                <table id="assetsTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Ativo</th>
+                            <th>Peso</th>
+                            <th>Sharpe OOS</th>
+                            <th>Profit Factor</th>
+                            <th>Win Rate</th>
+                            <th>Trades</th>
+                            <th>Avg Trade</th>
+                            <th>Max DD</th>
+                            <th>WF Score</th>
+                            <th>P(Lucro)</th>
+                            <th>P(2x)</th>
+                            <th>Growth</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- CAPITAL -->
+    <div id="capitalSection" class="section hidden">
+        <div class="section-title">
+            <span class="icon">💰</span> Projecao de Capital (1 Ano)
+        </div>
+        <div id="capitalGrid" class="capital-grid"></div>
+        <div class="suggested-box">
+            <div class="card-header" style="justify-content: center;">☄️ Capital Sugerido — HALLEY TRADE IA</div>
+            <div id="suggestedCapital" class="suggested-value">—</div>
+            <div class="card-sub" style="margin-top: 0.5rem;">
+                Baseado em Kelly Criterion fracional (50%) + risco de ruina + custos B3
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div style="text-align: center; padding: 2rem 0; color: var(--text-dim); font-size: 0.75rem;">
+        ☄️ HALLEY TRADE IA v3.0 — Sistema Quantitativo Autonomo com Machine Learning<br>
+        XGBoost + LightGBM + Random Forest + HMM + Meta-Labeling + Walk-Forward + Monte Carlo + Markowitz + Kelly
+    </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- JAVASCRIPT COMPLETO                                     -->
+<!-- ════════════════════════════════════════════════════════ -->
+<script>
+// ============================================================
+// CONFIGURACAO — ALTERE A URL ABAIXO PARA SEU HF SPACE
+// ============================================================
+const API_BASE = 'https://SEU_USERNAME-quant-api.hf.space';
+// ============================================================
+
+let currentRunId = null;
+let pollInterval = null;
+let charts = {};
+
+// ── CLOCK ────────────────────────────────────
+function updateClock() {
+    const now = new Date();
+    const br = now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const day = now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'short', day: '2-digit', month: 'short' });
+    document.getElementById('clock').textContent = `${day} ${br}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── HEALTH CHECK ─────────────────────────────
+async function checkHealth() {
+    const badge = document.getElementById('statusBadge');
+    try {
+        const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(15000) });
+        const data = await res.json();
+        if (data.status === 'alive' && data.db_connected) {
+            badge.innerHTML = '<span class="status-dot"></span> Online · DB OK';
+            badge.className = 'status-badge status-online';
+        } else if (data.status === 'alive') {
+            badge.innerHTML = '<span class="status-dot"></span> Online · DB Erro';
+            badge.className = 'status-badge status-loading';
+        } else {
+            badge.innerHTML = '<span class="status-dot"></span> Erro';
+            badge.className = 'status-badge status-offline';
+        }
+    } catch (e) {
+        badge.innerHTML = '<span class="status-dot"></span> Offline';
+        badge.className = 'status-badge status-offline';
+    }
+}
+checkHealth();
+setInterval(checkHealth, 60000);
+
+// ── START RUN ────────────────────────────────
+async function startRun() {
+    const btn = document.getElementById('btnRun');
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳</span> Processando...';
+
+    show('logSection');
+    show('progressContainer', 'block');
+    document.getElementById('logBox').innerHTML = '';
+    document.getElementById('progressFill').style.width = '0%';
+
+    try {
+        const res = await fetch(`${API_BASE}/run`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        });
+        const data = await res.json();
+        currentRunId = data.run_id;
+        pollInterval = setInterval(pollStatus, 2500);
+    } catch (e) {
+        alert('Erro ao conectar com o backend: ' + e.message);
+        btn.disabled = false;
+        btn.innerHTML = '<span>▶</span> Iniciar Analise';
+    }
+}
+
+// ── FORCE DAILY ──────────────────────────────
+async function forceDaily() {
+    if (!confirm('Forcar analise diaria agora?')) return;
+    try {
+        const res = await fetch(`${API_BASE}/force-daily`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        });
+        const data = await res.json();
+        currentRunId = data.run_id;
+        show('logSection');
+        show('progressContainer', 'block');
+        document.getElementById('logBox').innerHTML = '';
+        document.getElementById('btnRun').disabled = true;
+        document.getElementById('btnRun').innerHTML = '<span>⏳</span> Processando...';
+        pollInterval = setInterval(pollStatus, 2500);
+    } catch (e) {
+        alert('Erro: ' + e.message);
+    }
+}
+
+// ── POLL STATUS ──────────────────────────────
+async function pollStatus() {
+    if (!currentRunId) return;
+    try {
+        const res = await fetch(`${API_BASE}/status/${currentRunId}`);
+        const data = await res.json();
+
+        // Progress
+        const pct = data.progress || 0;
+        document.getElementById('progressFill').style.width = `${pct}%`;
+        document.getElementById('progressPct').textContent = `${pct}%`;
+        document.getElementById('progressPhase').textContent = data.phase || '';
+        document.getElementById('phaseText').textContent = data.phase || '';
+
+        // Logs
+        const logBox = document.getElementById('logBox');
+        logBox.innerHTML = (data.logs || []).map(l => `<p class="log-line">${escapeHtml(l)}</p>`).join('');
+        logBox.scrollTop = logBox.scrollHeight;
+
+        // Finished?
+        if (data.status === 'completed' || data.status === 'failed') {
+            clearInterval(pollInterval);
+            const btn = document.getElementById('btnRun');
+            btn.disabled = false;
+            btn.innerHTML = '<span>▶</span> Iniciar Analise';
+
+            if (data.status === 'completed') {
+                loadResults(currentRunId);
+            }
+        }
+    } catch (e) {
+        console.error('Poll error:', e);
+    }
+}
+
+// ── LOAD RESULTS ─────────────────────────────
+async function loadResults(runId) {
+    try {
+        const res = await fetch(`${API_BASE}/results/${runId}`);
+        const data = await res.json();
+        if (data.assets && Object.keys(data.assets).length > 0) {
+            renderAll(data);
+        } else if (data.message) {
+            document.getElementById('phaseText').textContent = data.message;
+        }
+    } catch (e) {
+        console.error('Results error:', e);
+    }
+}
+
+// ── LOAD HISTORY ─────────────────────────────
+async function loadHistory() {
+    try {
+        const res = await fetch(`${API_BASE}/history`);
+        const data = await res.json();
+        if (data.runs && data.runs.length > 0) {
+            // Buscar resultado da ultima rodada completa
+            for (const run of data.runs) {
+                if (run.status === 'completed' && run.id) {
+                    try {
+                        const rres = await fetch(`${API_BASE}/results/${run.id}`);
+                        const rdata = await rres.json();
+                        if (rdata.assets && Object.keys(rdata.assets).length > 0) {
+                            renderAll(rdata);
+                            return;
+                        }
+                    } catch (e) { continue; }
+                }
+            }
+            alert('Nenhuma rodada com resultados encontrada.');
+        } else {
+            alert('Nenhuma rodada no historico.');
+        }
+    } catch (e) {
+        alert('Erro: ' + e.message);
+    }
+}
+
+// ── LOAD SCHEDULER ───────────────────────────
+async function loadScheduler() {
+    try {
+        const res = await fetch(`${API_BASE}/scheduler`);
+        const data = await res.json();
+        const grid = document.getElementById('schedulerGrid');
+
+        const scheduleInfo = data.schedule || {};
+        const jobs = data.jobs || [];
+
+        let html = '';
+        for (const job of jobs) {
+            const info = scheduleInfo[job.id] || job.trigger;
+            html += `
+                <div class="schedule-card">
+                    <div class="job-name">${job.id.replace('halley_', '').replace(/_/g, ' ').toUpperCase()}</div>
+                    <div class="job-detail">${info}</div>
+                    <div class="job-next">Proxima: ${job.next_run || '—'}</div>
+                </div>
+            `;
+        }
+
+        if (!jobs.length) {
+            html = '<div class="schedule-card"><div class="job-name">Nenhum job encontrado</div></div>';
+        }
+
+        html += `
+            <div class="schedule-card">
+                <div class="job-name">STATUS</div>
+                <div class="job-detail">Scheduler: ${data.scheduler_running ? '✅ Ativo' : '❌ Inativo'}</div>
+                <div class="job-next">Timezone: ${data.timezone || 'N/A'}</div>
+            </div>
+        `;
+
+        grid.innerHTML = html;
+        show('schedulerSection');
+    } catch (e) {
+        alert('Erro ao carregar scheduler: ' + e.message);
+    }
+}
+
+// ── RENDER ALL ───────────────────────────────
+function renderAll(data) {
+    renderKPIs(data);
+    renderCharts(data);
+    renderTable(data);
+    renderCapital(data);
+}
+
+// ── RENDER KPIs ──────────────────────────────
+function renderKPIs(data) {
+    show('kpiSection');
+    show('kpiExtraSection');
+
+    document.getElementById('kpiValidated').textContent = data.validated_assets || 0;
+    document.getElementById('kpiTotal').textContent = `de ${data.total_assets || 0} analisados`;
+
+    const sharpe = data.portfolio?.portfolio_sharpe || 0;
+    const el = document.getElementById('kpiSharpe');
+    el.textContent = sharpe.toFixed(3);
+    el.className = `card-value ${sharpe > 0.5 ? 'green' : sharpe > 0 ? 'yellow' : 'red'}`;
+
+    const ret = data.annual_return_est || 0;
+    const retEl = document.getElementById('kpiReturn');
+    retEl.textContent = `${(ret * 100).toFixed(1)}%`;
+    retEl.className = `card-value ${ret > 0 ? 'green' : 'red'}`;
+
+    const ruin = data.risk?.risk_of_ruin || 0;
+    const ruinEl = document.getElementById('kpiRuin');
+    ruinEl.textContent = `${(ruin * 100).toFixed(2)}%`;
+    ruinEl.className = `card-value ${ruin < 0.05 ? 'green' : ruin < 0.15 ? 'yellow' : 'red'}`;
+
+    const kelly = data.portfolio?.kelly_total || 0;
+    document.getElementById('kpiKelly').textContent = `${(kelly * 100).toFixed(1)}%`;
+
+    document.getElementById('kpiTrades').textContent = data.trades_per_year || '—';
+
+    const dur = data.duration_seconds || 0;
+    const mins = Math.floor(dur / 60);
+    const secs = Math.floor(dur % 60);
+    document.getElementById('kpiDuration').textContent = `${mins}m ${secs}s`;
+
+    const cost = data.config_used?.cost_round_trip || 0.00325;
+    document.getElementById('kpiCosts').textContent = `${(cost * 100).toFixed(3)}%`;
+}
+
+// ── RENDER CHARTS ────────────────────────────
+function renderCharts(data) {
+    show('chartSection');
+    show('chartExtraSection');
+
+    const weights = data.portfolio?.weights || {};
+    const assets = data.assets || {};
+    const tickers = Object.keys(assets);
+    const tickerLabels = tickers.map(t => t.replace('.SA', ''));
+
+    const colors = [
+        '#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6',
+        '#ec4899','#06b6d4','#84cc16','#f97316','#14b8a6',
+        '#e11d48','#a855f7','#22d3ee','#eab308','#d946ef',
+        '#0ea5e9','#65a30d','#dc2626','#7c3aed','#059669'
+    ];
+
+    // Allocation chart
+    if (charts.allocation) charts.allocation.destroy();
+    charts.allocation = new Chart(document.getElementById('chartAllocation'), {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(weights).map(t => t.replace('.SA', '')),
+            datasets: [{
+                data: Object.values(weights).map(v => (v * 100).toFixed(1)),
+                backgroundColor: colors,
+                borderWidth: 0,
+                hoverOffset: 8,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: { color: '#94a3b8', font: { size: 11 }, padding: 8, usePointStyle: true, pointStyleWidth: 10 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ` ${ctx.label}: ${ctx.raw}%`
+                    }
+                }
+            }
+        }
+    });
+
+    // Monte Carlo probability
+    if (charts.mc) charts.mc.destroy();
+    charts.mc = new Chart(document.getElementById('chartMonteCarlo'), {
+        type: 'bar',
+        data: {
+            labels: tickerLabels,
+            datasets: [{
+                label: 'P(Lucro) %',
+                data: tickers.map(t => ((assets[t].mc?.prob_profitable || 0) * 100).toFixed(1)),
+                backgroundColor: tickers.map((t, i) => {
+                    const p = assets[t].mc?.prob_profitable || 0;
+                    return p > 0.7 ? '#10b981' : p > 0.5 ? '#f59e0b' : '#ef4444';
+                }),
+                borderRadius: 6,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: tickers.length > 10 ? 'y' : 'x',
+            scales: {
+                y: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.03)' } },
+                x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.03)' } }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: { label: ctx => ` Prob. Lucro: ${ctx.raw}%` }
+                }
+            }
+        }
+    });
+
+    // Sharpe chart
+    if (charts.sharpe) charts.sharpe.destroy();
+    const sharpeData = tickers.map(t => assets[t].sharpe_oos || 0);
+    charts.sharpe = new Chart(document.getElementById('chartSharpe'), {
+        type: 'bar',
+        data: {
+            labels: tickerLabels,
+            datasets: [{
+                label: 'Sharpe OOS',
+                data: sharpeData.map(v => v.toFixed(3)),
+                backgroundColor: sharpeData.map(v => v > 0.5 ? '#10b981' : v > 0 ? '#f59e0b' : '#ef4444'),
+                borderRadius: 6,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.03)' } },
+                x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { display: false } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // Drawdown chart
+    if (charts.dd) charts.dd.destroy();
+    charts.dd = new Chart(document.getElementById('chartDrawdown'), {
+        type: 'bar',
+        data: {
+            labels: tickerLabels,
+            datasets: [{
+                label: 'Max Drawdown %',
+                data: tickers.map(t => ((assets[t].max_drawdown || 0) * 100).toFixed(1)),
+                backgroundColor: tickers.map(t => {
+                    const dd = assets[t].max_drawdown || 0;
+                    return dd < 0.1 ? '#10b981' : dd < 0.2 ? '#f59e0b' : '#ef4444';
+                }),
+                borderRadius: 6,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.03)' } },
+                x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { display: false } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+
+// ── RENDER TABLE ─────────────────────────────
+function renderTable(data) {
+    show('assetsSection');
+    const tbody = document.querySelector('#assetsTable tbody');
+    tbody.innerHTML = '';
+
+    const assets = data.assets || {};
+    const sorted = Object.entries(assets).sort((a, b) => (b[1].sharpe_oos || 0) - (a[1].sharpe_oos || 0));
+
+    sorted.forEach(([ticker, a], idx) => {
+        const row = document.createElement('tr');
+        const pp = ((a.mc?.prob_profitable || 0) * 100).toFixed(0);
+        const pd = ((a.mc?.prob_double || 0) * 100).toFixed(0);
+        const gr = (a.mc?.expected_growth || 1).toFixed(2);
+        const sh = (a.sharpe_oos || 0);
+        const wr = ((a.win_rate || 0) * 100).toFixed(1);
+        const dd = ((a.max_drawdown || 0) * 100).toFixed(1);
+        const wf = `${a.windows_passed || 0}/${a.windows_total || 0}`;
+        const wt = ((a.weight || 0) * 100).toFixed(1);
+        const at = a.avg_trade ? (a.avg_trade * 100).toFixed(3) : '—';
+
+        row.innerHTML = `
+            <td style="color: var(--text-dim);">${idx + 1}</td>
+            <td class="ticker-cell">${ticker.replace('.SA', '')}</td>
+            <td><strong>${wt}%</strong></td>
+            <td class="${sh > 0.5 ? 'green' : sh > 0 ? 'yellow' : 'red'}">${sh.toFixed(3)}</td>
+            <td>${(a.profit_factor_oos || 0).toFixed(2)}</td>
+            <td class="${parseFloat(wr) > 50 ? 'green' : 'yellow'}">${wr}%</td>
+            <td>${a.total_trades || 0}</td>
+            <td>${at}%</td>
+            <td class="red">${dd}%</td>
+            <td class="${a.windows_passed >= 3 ? 'green' : 'yellow'}">${wf}</td>
+            <td class="${parseFloat(pp) > 60 ? 'green' : 'yellow'}">${pp}%</td>
+            <td class="${parseFloat(pd) > 20 ? 'green' : 'yellow'}">${pd}%</td>
+            <td class="cyan">${gr}x</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// ── RENDER CAPITAL ───────────────────────────
+function renderCapital(data) {
+    show('capitalSection');
+    const grid = document.getElementById('capitalGrid');
+    grid.innerHTML = '';
+
+    const projections = data.projections || {};
+    for (const [label, info] of Object.entries(projections)) {
+        if (typeof info === 'object') {
+            grid.innerHTML += `
+                <div class="capital-card">
+                    <div class="capital-label">${label}</div>
+                    <div class="capital-invested">${info.investido}</div>
+                    <div class="capital-projected">${info.projetado_1ano}</div>
+                    <div class="capital-profit">Lucro: ${info.lucro_estimado} (${info.retorno})</div>
+                </div>
+            `;
+        } else {
+            grid.innerHTML += `
+                <div class="capital-card">
+                    <div class="capital-label">${label}</div>
+                    <div class="capital-projected">${info}</div>
+                </div>
+            `;
+        }
+    }
+
+    document.getElementById('suggestedCapital').textContent = data.suggested_capital || '—';
+}
+
+// ── HELPERS ──────────────────────────────────
+function show(id, display) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.classList.remove('hidden');
+        if (display) el.style.display = display;
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+</body>
+</html>
