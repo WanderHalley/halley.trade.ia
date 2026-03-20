@@ -8,10 +8,6 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☄️</text></svg>">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <style>
-        /* ============================================================
-           HALLEY TRADE IA — CSS COMPLETO
-           Design: Dark Glassmorphism
-           ============================================================ */
         :root {
             --bg-primary: #050a18;
             --bg-secondary: #0a1128;
@@ -44,9 +40,7 @@
             --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             --shadow-glow: 0 0 30px var(--accent-glow);
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
             font-family: var(--font);
             background: var(--bg-primary);
@@ -54,8 +48,6 @@
             min-height: 100vh;
             overflow-x: hidden;
         }
-
-        /* Fundo animado */
         body::before {
             content: '';
             position: fixed;
@@ -67,447 +59,176 @@
             pointer-events: none;
             z-index: 0;
         }
-
-        /* ── HEADER ──────────────────────────────── */
         .header {
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            position: sticky; top: 0; z-index: 100;
             background: rgba(5, 10, 24, 0.85);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border);
             padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: flex; justify-content: space-between; align-items: center;
         }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .logo-icon {
-            font-size: 1.8rem;
-            filter: drop-shadow(0 0 8px var(--accent-glow));
-        }
-
+        .logo { display: flex; align-items: center; gap: 0.75rem; }
+        .logo-icon { font-size: 1.8rem; filter: drop-shadow(0 0 8px var(--accent-glow)); }
         .logo h1 {
-            font-size: 1.3rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
+            font-size: 1.3rem; font-weight: 800; letter-spacing: -0.02em;
             background: linear-gradient(135deg, var(--accent-light), var(--cyan));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
-
-        .logo .version {
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            font-weight: 400;
-            margin-left: 0.3rem;
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
+        .logo .version { font-size: 0.65rem; color: var(--text-muted); font-weight: 400; margin-left: 0.3rem; }
+        .header-right { display: flex; align-items: center; gap: 1rem; }
         .status-badge {
-            padding: 0.4rem 1rem;
-            border-radius: 20px;
-            font-size: 0.78rem;
-            font-weight: 600;
-            letter-spacing: 0.02em;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
+            padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.78rem;
+            font-weight: 600; display: flex; align-items: center; gap: 0.4rem;
         }
-
-        .status-dot {
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-
-        .status-online {
-            background: var(--green-glow);
-            color: var(--green-light);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-        }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .status-online { background: var(--green-glow); color: var(--green-light); border: 1px solid rgba(16, 185, 129, 0.3); }
         .status-online .status-dot { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
-
-        .status-offline {
-            background: var(--red-glow);
-            color: var(--red-light);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-        }
+        .status-offline { background: var(--red-glow); color: var(--red-light); border: 1px solid rgba(239, 68, 68, 0.3); }
         .status-offline .status-dot { background: var(--red); }
-
-        .status-loading {
-            background: rgba(245, 158, 11, 0.15);
-            color: var(--yellow-light);
-            border: 1px solid rgba(245, 158, 11, 0.3);
-        }
+        .status-loading { background: rgba(245, 158, 11, 0.15); color: var(--yellow-light); border: 1px solid rgba(245, 158, 11, 0.3); }
         .status-loading .status-dot { background: var(--yellow); animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .clock { font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono); }
+        .container { position: relative; z-index: 1; max-width: 1500px; margin: 0 auto; padding: 1.5rem; }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
+        /* TABS */
+        .tabs { display: flex; gap: 0; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+        .tab-btn {
+            padding: 0.7rem 1.5rem; border: none; background: none; color: var(--text-muted);
+            font-size: 0.85rem; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent;
+            transition: all 0.25s ease; display: flex; align-items: center; gap: 0.4rem;
         }
+        .tab-btn:hover { color: var(--text); }
+        .tab-btn.active { color: var(--accent-light); border-bottom-color: var(--accent); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
-        .clock {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            font-family: var(--font-mono);
-        }
-
-        /* ── CONTAINER ───────────────────────────── */
-        .container {
-            position: relative;
-            z-index: 1;
-            max-width: 1500px;
-            margin: 0 auto;
-            padding: 1.5rem;
-        }
-
-        /* ── CONTROLS ────────────────────────────── */
-        .controls {
-            display: flex;
-            gap: 0.8rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
+        /* CONTROLS */
+        .controls { display: flex; gap: 0.8rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center; }
         .btn {
-            padding: 0.65rem 1.4rem;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-size: 0.85rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            letter-spacing: 0.01em;
+            padding: 0.65rem 1.4rem; border: none; border-radius: var(--radius-sm);
+            font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.25s ease;
+            display: flex; align-items: center; gap: 0.5rem;
         }
+        .btn-primary { background: linear-gradient(135deg, var(--accent), #4f46e5); color: white; box-shadow: 0 4px 15px var(--accent-glow); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 25px var(--accent-glow); }
+        .btn-primary:disabled { background: var(--text-dim); box-shadow: none; cursor: not-allowed; transform: none; }
+        .btn-secondary { background: var(--bg-card); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--border-hover); background: var(--bg-card-hover); }
+        .btn-danger { background: linear-gradient(135deg, var(--red), #dc2626); color: white; }
+        .btn-danger:hover { transform: translateY(-1px); }
+        .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.75rem; }
+        .btn-green { background: linear-gradient(135deg, var(--green), #059669); color: white; }
+        .btn-green:hover { transform: translateY(-1px); }
+        .phase-text { color: var(--text-muted); font-size: 0.85rem; flex: 1; text-align: right; }
 
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent), #4f46e5);
-            color: white;
-            box-shadow: 0 4px 15px var(--accent-glow);
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 25px var(--accent-glow);
-        }
-        .btn-primary:disabled {
-            background: var(--text-dim);
-            box-shadow: none;
-            cursor: not-allowed;
-            transform: none;
-        }
+        /* PROGRESS */
+        .progress-container { margin-bottom: 1.5rem; display: none; }
+        .progress-info { display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.78rem; }
+        .progress-bar { width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--cyan), var(--green)); border-radius: 3px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px var(--accent-glow); }
 
-        .btn-secondary {
-            background: var(--bg-card);
-            color: var(--text);
-            border: 1px solid var(--border);
-            backdrop-filter: blur(10px);
-        }
-        .btn-secondary:hover {
-            border-color: var(--border-hover);
-            background: var(--bg-card-hover);
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, var(--red), #dc2626);
-            color: white;
-        }
-
-        .phase-text {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            flex: 1;
-            text-align: right;
-        }
-
-        /* ── PROGRESS BAR ────────────────────────── */
-        .progress-container {
-            margin-bottom: 1.5rem;
-            display: none;
-        }
-
-        .progress-info {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.4rem;
-            font-size: 0.78rem;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 3px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent), var(--cyan), var(--green));
-            border-radius: 3px;
-            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 0 10px var(--accent-glow);
-        }
-
-        /* ── GRID LAYOUTS ────────────────────────── */
+        /* GRID / CARDS */
         .grid { display: grid; gap: 1.2rem; }
         .grid-4 { grid-template-columns: repeat(4, 1fr); }
         .grid-3 { grid-template-columns: repeat(3, 1fr); }
         .grid-2 { grid-template-columns: repeat(2, 1fr); }
-        .grid-1 { grid-template-columns: 1fr; }
+        .card { background: var(--bg-card); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; transition: all 0.3s ease; }
+        .card:hover { border-color: var(--border-hover); box-shadow: var(--shadow-glow); }
+        .card-header { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.4rem; }
+        .card-value { font-size: 2.2rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
+        .card-sub { font-size: 0.75rem; color: var(--text-dim); margin-top: 0.4rem; }
+        .green { color: var(--green-light); } .red { color: var(--red-light); }
+        .yellow { color: var(--yellow-light); } .cyan { color: var(--cyan); }
+        .purple { color: var(--purple); } .accent { color: var(--accent-light); }
 
-        /* ── CARDS ────────────────────────────────── */
-        .card {
-            background: var(--bg-card);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            transition: all 0.3s ease;
-        }
-        .card:hover {
-            border-color: var(--border-hover);
-            box-shadow: var(--shadow-glow);
-        }
-
-        .card-header {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            font-weight: 700;
-            margin-bottom: 0.6rem;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .card-value {
-            font-size: 2.2rem;
-            font-weight: 800;
-            line-height: 1.1;
-            letter-spacing: -0.02em;
-        }
-
-        .card-sub {
-            font-size: 0.75rem;
-            color: var(--text-dim);
-            margin-top: 0.4rem;
-        }
-
-        .green { color: var(--green-light); }
-        .red { color: var(--red-light); }
-        .yellow { color: var(--yellow-light); }
-        .cyan { color: var(--cyan); }
-        .purple { color: var(--purple); }
-        .accent { color: var(--accent-light); }
-
-        /* ── SECTIONS ────────────────────────────── */
-        .section {
-            margin-bottom: 1.8rem;
-        }
-
-        .section-title {
-            font-size: 1rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            padding-bottom: 0.6rem;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
+        /* SECTIONS */
+        .section { margin-bottom: 1.8rem; }
+        .section-title { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.5rem; }
         .section-title .icon { font-size: 1.1rem; }
 
-        /* ── LOG BOX ─────────────────────────────── */
-        .log-box {
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 1rem;
-            max-height: 350px;
-            overflow-y: auto;
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            line-height: 1.7;
-        }
-
+        /* LOG */
+        .log-box { background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; max-height: 350px; overflow-y: auto; font-family: var(--font-mono); font-size: 0.75rem; line-height: 1.7; }
         .log-box::-webkit-scrollbar { width: 6px; }
-        .log-box::-webkit-scrollbar-track { background: transparent; }
         .log-box::-webkit-scrollbar-thumb { background: var(--text-dim); border-radius: 3px; }
-
         .log-line { margin: 0; white-space: pre-wrap; word-break: break-all; }
 
-        /* ── TABLE ────────────────────────────────── */
-        .table-wrapper {
-            overflow-x: auto;
-            border-radius: var(--radius-sm);
-        }
+        /* TABLE */
+        .table-wrapper { overflow-x: auto; border-radius: var(--radius-sm); }
+        table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+        th { padding: 0.8rem 1rem; text-align: left; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); white-space: nowrap; }
+        td { padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.03); white-space: nowrap; }
+        tr:hover td { background: rgba(99, 102, 241, 0.04); }
+        .ticker-cell { font-weight: 700; color: var(--accent-light); }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.82rem;
-        }
+        /* CHARTS */
+        .chart-container { position: relative; height: 320px; }
 
-        th {
-            padding: 0.8rem 1rem;
-            text-align: left;
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            border-bottom: 1px solid var(--border);
-            white-space: nowrap;
-        }
+        /* CAPITAL */
+        .capital-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.8rem; }
+        .capital-card { background: var(--bg-glass); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; text-align: center; transition: all 0.3s ease; }
+        .capital-card:hover { border-color: var(--green); box-shadow: 0 0 15px var(--green-glow); }
+        .capital-card.active-capital { border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow); background: rgba(99, 102, 241, 0.08); }
+        .capital-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem; }
+        .capital-invested { font-size: 0.85rem; color: var(--text-dim); }
+        .capital-projected { font-size: 1.2rem; font-weight: 800; color: var(--green-light); margin-top: 0.2rem; }
+        .capital-profit { font-size: 0.75rem; color: var(--green); margin-top: 0.2rem; }
+        .suggested-box { background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(6, 182, 212, 0.05)); border: 1px solid var(--accent); border-radius: var(--radius); padding: 1.5rem; text-align: center; margin-top: 1.2rem; }
+        .suggested-value { font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, var(--green-light), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .capital-detail-row { display: flex; justify-content: center; gap: 2rem; margin-top: 0.8rem; flex-wrap: wrap; }
+        .capital-detail-item { text-align: center; }
+        .capital-detail-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; }
+        .capital-detail-value { font-size: 1rem; font-weight: 700; }
 
-        td {
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-            white-space: nowrap;
-        }
+        /* SCHEDULER */
+        .scheduler-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.8rem; }
+        .schedule-card { background: var(--bg-glass); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; }
+        .schedule-card .job-name { font-weight: 700; color: var(--accent-light); font-size: 0.85rem; margin-bottom: 0.3rem; }
+        .schedule-card .job-detail { font-size: 0.75rem; color: var(--text-muted); }
+        .schedule-card .job-next { font-size: 0.8rem; color: var(--green-light); font-family: var(--font-mono); margin-top: 0.3rem; }
 
-        tr:hover td {
-            background: rgba(99, 102, 241, 0.04);
-        }
+        /* CONFIG */
+        .config-sidebar { display: flex; gap: 0.8rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center; }
+        .session-select { background: var(--bg-card); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 0.5rem 1rem; font-size: 0.85rem; min-width: 200px; cursor: pointer; }
+        .session-select:focus { outline: none; border-color: var(--accent); }
+        .config-group { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem; margin-bottom: 1rem; }
+        .config-group-title { font-size: 0.85rem; font-weight: 700; color: var(--accent-light); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .config-row { display: grid; grid-template-columns: 1fr 160px 30px; gap: 0.8rem; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .config-row:last-child { border-bottom: none; }
+        .config-label { font-size: 0.8rem; color: var(--text); }
+        .config-input { background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: var(--radius-xs); color: var(--text); padding: 0.4rem 0.6rem; font-size: 0.8rem; font-family: var(--font-mono); text-align: right; width: 100%; }
+        .config-input:focus { outline: none; border-color: var(--accent); background: rgba(0,0,0,0.5); }
+        .config-input-wide { text-align: left; font-size: 1rem; font-weight: 700; padding: 0.6rem 1rem; }
+        .info-btn { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg-glass); color: var(--accent-light); cursor: pointer; font-size: 0.7rem; font-weight: 700; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
+        .info-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
 
-        .ticker-cell {
-            font-weight: 700;
-            color: var(--accent-light);
-        }
+        /* CAPITAL HIGHLIGHT */
+        .capital-highlight-box { background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(6, 182, 212, 0.05)); border: 2px solid var(--green); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; gap: 2rem; flex-wrap: wrap; }
+        .capital-highlight-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+        .capital-highlight-value { font-size: 2rem; font-weight: 800; color: var(--green-light); }
+        .capital-highlight-session { font-size: 0.75rem; color: var(--accent-light); background: rgba(99, 102, 241, 0.15); padding: 0.2rem 0.6rem; border-radius: 10px; }
 
-        /* ── CHARTS ──────────────────────────────── */
-        .chart-container {
-            position: relative;
-            height: 320px;
-        }
+        /* TICKERS */
+        .ticker-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+        .ticker-tag { background: rgba(99, 102, 241, 0.15); border: 1px solid var(--border); border-radius: 20px; padding: 0.3rem 0.8rem; font-size: 0.78rem; font-weight: 600; color: var(--accent-light); display: flex; align-items: center; gap: 0.4rem; }
+        .ticker-remove { width: 16px; height: 16px; border-radius: 50%; border: none; background: rgba(239, 68, 68, 0.3); color: var(--red-light); cursor: pointer; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; }
+        .ticker-remove:hover { background: var(--red); color: white; }
+        .ticker-add-row { display: flex; gap: 0.5rem; margin-top: 0.8rem; }
+        .ticker-add-input { background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: var(--radius-xs); color: var(--text); padding: 0.4rem 0.8rem; font-size: 0.8rem; font-family: var(--font-mono); text-transform: uppercase; width: 140px; }
+        .ticker-add-input:focus { outline: none; border-color: var(--accent); }
 
-        /* ── CAPITAL GRID ────────────────────────── */
-        .capital-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 0.8rem;
-        }
+        /* POPUP */
+        .popup-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; }
+        .popup-overlay.show { display: flex; }
+        .popup { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem; max-width: 500px; width: 90%; box-shadow: var(--shadow); }
+        .popup h3 { font-size: 1rem; color: var(--accent-light); margin-bottom: 0.8rem; }
+        .popup p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; }
+        .popup .close-btn { margin-top: 1rem; padding: 0.5rem 1.5rem; background: var(--accent); color: white; border: none; border-radius: var(--radius-xs); cursor: pointer; font-weight: 600; }
+        .save-input { background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: var(--radius-xs); color: var(--text); padding: 0.6rem 1rem; font-size: 0.9rem; width: 100%; margin: 0.8rem 0; }
+        .save-input:focus { outline: none; border-color: var(--accent); }
 
-        .capital-card {
-            background: var(--bg-glass);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 1rem;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-        .capital-card:hover {
-            border-color: var(--green);
-            box-shadow: 0 0 15px var(--green-glow);
-        }
-
-        .capital-label {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.3rem;
-        }
-
-        .capital-invested {
-            font-size: 0.85rem;
-            color: var(--text-dim);
-        }
-
-        .capital-projected {
-            font-size: 1.2rem;
-            font-weight: 800;
-            color: var(--green-light);
-            margin-top: 0.2rem;
-        }
-
-        .capital-profit {
-            font-size: 0.75rem;
-            color: var(--green);
-            margin-top: 0.2rem;
-        }
-
-        /* ── SUGGESTED CAPITAL ────────────────────── */
-        .suggested-box {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(6, 182, 212, 0.05));
-            border: 1px solid var(--accent);
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            text-align: center;
-            margin-top: 1.2rem;
-        }
-
-        .suggested-value {
-            font-size: 2.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--green-light), var(--cyan));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        /* ── SCHEDULER INFO ──────────────────────── */
-        .scheduler-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 0.8rem;
-        }
-
-        .schedule-card {
-            background: var(--bg-glass);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 1rem;
-        }
-
-        .schedule-card .job-name {
-            font-weight: 700;
-            color: var(--accent-light);
-            font-size: 0.85rem;
-            margin-bottom: 0.3rem;
-        }
-
-        .schedule-card .job-detail {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        .schedule-card .job-next {
-            font-size: 0.8rem;
-            color: var(--green-light);
-            font-family: var(--font-mono);
-            margin-top: 0.3rem;
-        }
-
-        /* ── HIDDEN ──────────────────────────────── */
         .hidden { display: none !important; }
-
-        /* ── RESPONSIVE ──────────────────────────── */
-        @media (max-width: 1200px) {
-            .grid-4 { grid-template-columns: repeat(2, 1fr); }
-        }
-
+        @media (max-width: 1200px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 768px) {
             .container { padding: 1rem; }
             .header { padding: 0.8rem 1rem; flex-wrap: wrap; gap: 0.5rem; }
@@ -517,710 +238,638 @@
             .logo h1 { font-size: 1rem; }
             .controls { flex-direction: column; align-items: stretch; }
             .phase-text { text-align: left; }
+            .tabs { flex-wrap: wrap; }
+            .config-row { grid-template-columns: 1fr 120px 30px; }
+            .capital-highlight-box { flex-direction: column; gap: 0.5rem; }
         }
-
-        @media (max-width: 480px) {
-            .grid-4 { grid-template-columns: 1fr; }
-            .capital-grid { grid-template-columns: 1fr 1fr; }
-        }
+        @media (max-width: 480px) { .grid-4 { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-<!-- ════════════════════════════════════════════════════════ -->
-<!-- HEADER                                                  -->
-<!-- ════════════════════════════════════════════════════════ -->
 <header class="header">
     <div class="logo">
         <span class="logo-icon">☄️</span>
-        <div>
-            <h1>HALLEY TRADE IA <span class="version">v3.0</span></h1>
-        </div>
+        <div><h1>HALLEY TRADE IA <span class="version">v3.0</span></h1></div>
     </div>
     <div class="header-right">
         <span id="clock" class="clock"></span>
-        <div id="statusBadge" class="status-badge status-loading">
-            <span class="status-dot"></span>
-            Verificando...
-        </div>
+        <div id="statusBadge" class="status-badge status-loading"><span class="status-dot"></span> Verificando...</div>
     </div>
 </header>
 
-<!-- ════════════════════════════════════════════════════════ -->
-<!-- MAIN CONTENT                                            -->
-<!-- ════════════════════════════════════════════════════════ -->
 <div class="container">
 
-    <!-- CONTROLES -->
-    <div class="controls">
-        <button id="btnRun" class="btn btn-primary" onclick="startRun()">
-            <span>▶</span> Iniciar Analise
-        </button>
-        <button class="btn btn-secondary" onclick="loadHistory()">
-            <span>📋</span> Historico
-        </button>
-        <button class="btn btn-secondary" onclick="loadScheduler()">
-            <span>📅</span> Scheduler
-        </button>
-        <button class="btn btn-secondary" onclick="forceDaily()">
-            <span>⚡</span> Forcar Diaria
-        </button>
-        <span id="phaseText" class="phase-text"></span>
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('dashboard', this)">📊 Dashboard</button>
+        <button class="tab-btn" onclick="switchTab('config', this)">⚙️ Configuração</button>
     </div>
 
-    <!-- PROGRESS BAR -->
-    <div id="progressContainer" class="progress-container">
-        <div class="progress-info">
-            <span id="progressPhase" style="color: var(--accent-light);"></span>
-            <span id="progressPct" style="color: var(--text-muted);">0%</span>
-        </div>
-        <div class="progress-bar">
-            <div id="progressFill" class="progress-fill" style="width: 0%"></div>
-        </div>
-    </div>
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- DASHBOARD TAB                                  -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div id="tab-dashboard" class="tab-content active">
 
-    <!-- SCHEDULER INFO -->
-    <div id="schedulerSection" class="section hidden">
-        <div class="section-title">
-            <span class="icon">📅</span> Automacao — Jobs Agendados
+        <!-- Capital da sessão ativa -->
+        <div id="capitalBanner" class="capital-highlight-box">
+            <div>
+                <div class="capital-highlight-label">Capital Operado</div>
+                <div id="capitalBannerValue" class="capital-highlight-value">R$ 50.000</div>
+            </div>
+            <div id="capitalBannerSession" class="capital-highlight-session">Sessão: Padrão</div>
         </div>
-        <div id="schedulerGrid" class="scheduler-grid"></div>
-    </div>
 
-    <!-- LOGS -->
-    <div id="logSection" class="section hidden">
-        <div class="section-title">
-            <span class="icon">📟</span> Logs em Tempo Real
+        <div class="controls">
+            <button id="btnRun" class="btn btn-primary" onclick="startRun()"><span>▶</span> Iniciar Analise</button>
+            <button class="btn btn-secondary" onclick="loadHistory()"><span>📋</span> Historico</button>
+            <button class="btn btn-secondary" onclick="loadScheduler()"><span>📅</span> Scheduler</button>
+            <button class="btn btn-secondary" onclick="forceDaily()"><span>⚡</span> Forcar Diaria</button>
+            <span id="phaseText" class="phase-text"></span>
         </div>
-        <div id="logBox" class="log-box"></div>
-    </div>
 
-    <!-- KPIs -->
-    <div id="kpiSection" class="section hidden">
-        <div class="section-title">
-            <span class="icon">📊</span> Metricas Principais
+        <div id="progressContainer" class="progress-container">
+            <div class="progress-info">
+                <span id="progressPhase" style="color: var(--accent-light);"></span>
+                <span id="progressPct" style="color: var(--text-muted);">0%</span>
+            </div>
+            <div class="progress-bar"><div id="progressFill" class="progress-fill" style="width: 0%"></div></div>
         </div>
-        <div class="grid grid-4">
-            <div class="card">
-                <div class="card-header">☄️ Ativos Validados</div>
-                <div id="kpiValidated" class="card-value green">—</div>
-                <div id="kpiTotal" class="card-sub"></div>
-            </div>
-            <div class="card">
-                <div class="card-header">📈 Portfolio Sharpe</div>
-                <div id="kpiSharpe" class="card-value">—</div>
-                <div class="card-sub">Retorno ajustado ao risco</div>
-            </div>
-            <div class="card">
-                <div class="card-header">💰 Retorno Anual Est.</div>
-                <div id="kpiReturn" class="card-value green">—</div>
-                <div class="card-sub">Baseado em Walk-Forward OOS</div>
-            </div>
-            <div class="card">
-                <div class="card-header">☠️ Risco de Ruina</div>
-                <div id="kpiRuin" class="card-value">—</div>
-                <div class="card-sub">Prob. de perder 50% do capital</div>
-            </div>
-        </div>
-    </div>
 
-    <!-- KPIs EXTRAS -->
-    <div id="kpiExtraSection" class="section hidden">
-        <div class="grid grid-4">
-            <div class="card">
-                <div class="card-header">🎯 Kelly Total</div>
-                <div id="kpiKelly" class="card-value cyan">—</div>
-                <div class="card-sub">Fracao Kelly (50%)</div>
-            </div>
-            <div class="card">
-                <div class="card-header">📊 Trades / Ano</div>
-                <div id="kpiTrades" class="card-value accent">—</div>
-                <div class="card-sub">Total de operacoes estimadas</div>
-            </div>
-            <div class="card">
-                <div class="card-header">⏱️ Duracao</div>
-                <div id="kpiDuration" class="card-value">—</div>
-                <div class="card-sub">Tempo de processamento</div>
-            </div>
-            <div class="card">
-                <div class="card-header">🔧 Custos Modelados</div>
-                <div id="kpiCosts" class="card-value yellow">0.325%</div>
-                <div class="card-sub">Round-trip (emolumentos+corretagem+slippage)</div>
+        <div id="schedulerSection" class="section hidden">
+            <div class="section-title"><span class="icon">📅</span> Automacao — Jobs Agendados</div>
+            <div id="schedulerGrid" class="scheduler-grid"></div>
+        </div>
+
+        <div id="logSection" class="section hidden">
+            <div class="section-title"><span class="icon">📟</span> Logs em Tempo Real</div>
+            <div id="logBox" class="log-box"></div>
+        </div>
+
+        <div id="kpiSection" class="section hidden">
+            <div class="section-title"><span class="icon">📊</span> Metricas Principais</div>
+            <div class="grid grid-4">
+                <div class="card"><div class="card-header">☄️ Ativos Validados</div><div id="kpiValidated" class="card-value green">—</div><div id="kpiTotal" class="card-sub"></div></div>
+                <div class="card"><div class="card-header">📈 Portfolio Sharpe</div><div id="kpiSharpe" class="card-value">—</div><div class="card-sub">Retorno ajustado ao risco</div></div>
+                <div class="card"><div class="card-header">💰 Retorno Anual Est.</div><div id="kpiReturn" class="card-value green">—</div><div class="card-sub">Baseado em Walk-Forward OOS</div></div>
+                <div class="card"><div class="card-header">☠️ Risco de Ruina</div><div id="kpiRuin" class="card-value">—</div><div class="card-sub">Prob. de perder 50% do capital</div></div>
             </div>
         </div>
-    </div>
 
-    <!-- CHARTS -->
-    <div id="chartSection" class="section hidden">
-        <div class="grid grid-2">
-            <div class="card">
-                <div class="card-header">🥧 Alocacao do Portfolio (Markowitz)</div>
-                <div class="chart-container">
-                    <canvas id="chartAllocation"></canvas>
-                </div>
+        <div id="kpiExtraSection" class="section hidden">
+            <div class="grid grid-4">
+                <div class="card"><div class="card-header">🎯 Kelly Total</div><div id="kpiKelly" class="card-value cyan">—</div><div class="card-sub">Fracao Kelly (50%)</div></div>
+                <div class="card"><div class="card-header">📊 Trades / Ano</div><div id="kpiTrades" class="card-value accent">—</div><div class="card-sub">Operacoes estimadas</div></div>
+                <div class="card"><div class="card-header">⏱️ Duracao</div><div id="kpiDuration" class="card-value">—</div><div class="card-sub">Processamento</div></div>
+                <div class="card"><div class="card-header">🔧 Custos</div><div id="kpiCosts" class="card-value yellow">0.325%</div><div class="card-sub">Round-trip</div></div>
             </div>
-            <div class="card">
-                <div class="card-header">🎲 Monte Carlo — Prob. de Lucro por Ativo</div>
-                <div class="chart-container">
-                    <canvas id="chartMonteCarlo"></canvas>
-                </div>
+        </div>
+
+        <div id="chartSection" class="section hidden">
+            <div class="grid grid-2">
+                <div class="card"><div class="card-header">🥧 Alocacao do Portfolio</div><div class="chart-container"><canvas id="chartAllocation"></canvas></div></div>
+                <div class="card"><div class="card-header">🎲 Monte Carlo — Prob. Lucro</div><div class="chart-container"><canvas id="chartMonteCarlo"></canvas></div></div>
+            </div>
+        </div>
+
+        <div id="chartExtraSection" class="section hidden">
+            <div class="grid grid-2">
+                <div class="card"><div class="card-header">📈 Sharpe OOS por Ativo</div><div class="chart-container"><canvas id="chartSharpe"></canvas></div></div>
+                <div class="card"><div class="card-header">📉 Max Drawdown por Ativo</div><div class="chart-container"><canvas id="chartDrawdown"></canvas></div></div>
+            </div>
+        </div>
+
+        <div id="assetsSection" class="section hidden">
+            <div class="section-title"><span class="icon">🏆</span> Ativos Validados</div>
+            <div class="card"><div class="table-wrapper">
+                <table id="assetsTable"><thead><tr>
+                    <th>#</th><th>Ativo</th><th>Peso</th><th>Valor Alocado</th><th>Sharpe</th><th>PF</th>
+                    <th>WR</th><th>Trades</th><th>Avg Trade</th><th>Max DD</th>
+                    <th>WF</th><th>P(Lucro)</th><th>Growth</th>
+                </tr></thead><tbody></tbody></table>
+            </div></div>
+        </div>
+
+        <div id="capitalSection" class="section hidden">
+            <div class="section-title"><span class="icon">💰</span> Projecao de Capital (1 Ano)</div>
+            <div id="capitalGrid" class="capital-grid"></div>
+            <div class="suggested-box">
+                <div class="card-header" style="justify-content: center;">☄️ Resultado com Seu Capital</div>
+                <div id="suggestedCapital" class="suggested-value">—</div>
+                <div id="suggestedSub" class="card-sub" style="margin-top: 0.5rem;"></div>
+                <div id="capitalDetails" class="capital-detail-row"></div>
             </div>
         </div>
     </div>
 
-    <!-- CHART EXTRA: SHARPE POR ATIVO -->
-    <div id="chartExtraSection" class="section hidden">
-        <div class="grid grid-2">
-            <div class="card">
-                <div class="card-header">📈 Sharpe OOS por Ativo</div>
-                <div class="chart-container">
-                    <canvas id="chartSharpe"></canvas>
-                </div>
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- CONFIG TAB                                     -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div id="tab-config" class="tab-content">
+
+        <div class="section-title"><span class="icon">⚙️</span> Gerenciamento de Sessões</div>
+
+        <div class="config-sidebar">
+            <select id="sessionSelect" class="session-select" onchange="loadSession()"></select>
+            <button class="btn btn-green btn-sm" onclick="showSavePopup()">💾 Salvar Como</button>
+            <button class="btn btn-primary btn-sm" onclick="saveCurrentSession()">💾 Salvar</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteSession()">🗑️ Excluir</button>
+            <button class="btn btn-secondary btn-sm" onclick="loadDefaultSession()">🔄 Padrão</button>
+        </div>
+
+        <!-- CAPITAL OPERADO -->
+        <div class="config-group" style="border-color: var(--green); background: rgba(16, 185, 129, 0.05);">
+            <div class="config-group-title">💰 Capital Operado</div>
+            <div class="config-row" style="grid-template-columns: 1fr 200px 30px;">
+                <span class="config-label" style="font-size:0.9rem; font-weight:700;">Valor do Capital (R$)</span>
+                <input type="number" class="config-input config-input-wide" id="cfg_capital" step="1000" min="0" oninput="updateCapitalBanner()">
+                <button class="info-btn" onclick="showInfo('capital')">?</button>
             </div>
-            <div class="card">
-                <div class="card-header">📉 Max Drawdown por Ativo</div>
-                <div class="chart-container">
-                    <canvas id="chartDrawdown"></canvas>
-                </div>
+        </div>
+
+        <!-- TICKERS -->
+        <div class="config-group">
+            <div class="config-group-title">📋 Ativos (Tickers B3)</div>
+            <div id="tickerList" class="ticker-list"></div>
+            <div class="ticker-add-row">
+                <input type="text" id="tickerAddInput" class="ticker-add-input" placeholder="Ex: MGLU3.SA" onkeydown="if(event.key==='Enter')addTicker()">
+                <button class="btn btn-green btn-sm" onclick="addTicker()">+ Adicionar</button>
             </div>
+        </div>
+
+        <!-- DADOS -->
+        <div class="config-group">
+            <div class="config-group-title">📅 Dados</div>
+            <div class="config-row"><span class="config-label">Data Início</span><input type="date" class="config-input" id="cfg_start_date"><button class="info-btn" onclick="showInfo('start_date')">?</button></div>
+            <div class="config-row"><span class="config-label">Mínimo de Anos</span><input type="number" class="config-input" id="cfg_min_years" step="1"><button class="info-btn" onclick="showInfo('min_years')">?</button></div>
+            <div class="config-row"><span class="config-label">Mín. Data Points</span><input type="number" class="config-input" id="cfg_min_data_points" step="1"><button class="info-btn" onclick="showInfo('min_data_points')">?</button></div>
+        </div>
+
+        <!-- CUSTOS -->
+        <div class="config-group">
+            <div class="config-group-title">💲 Custos B3</div>
+            <div class="config-row"><span class="config-label">Emolumentos</span><input type="number" class="config-input" id="cfg_cost_emolumentos" step="0.000001"><button class="info-btn" onclick="showInfo('cost_emolumentos')">?</button></div>
+            <div class="config-row"><span class="config-label">Corretagem</span><input type="number" class="config-input" id="cfg_cost_corretagem" step="0.000001"><button class="info-btn" onclick="showInfo('cost_corretagem')">?</button></div>
+            <div class="config-row"><span class="config-label">Slippage</span><input type="number" class="config-input" id="cfg_cost_slippage" step="0.000001"><button class="info-btn" onclick="showInfo('cost_slippage')">?</button></div>
+            <div class="config-row"><span class="config-label">Custo por Lado</span><input type="number" class="config-input" id="cfg_cost_per_side" step="0.000001"><button class="info-btn" onclick="showInfo('cost_per_side')">?</button></div>
+            <div class="config-row"><span class="config-label">Custo Round-Trip</span><input type="number" class="config-input" id="cfg_cost_round_trip" step="0.000001"><button class="info-btn" onclick="showInfo('cost_round_trip')">?</button></div>
+        </div>
+
+        <!-- WALK-FORWARD -->
+        <div class="config-group">
+            <div class="config-group-title">🔬 Walk-Forward Validation</div>
+            <div class="config-row"><span class="config-label">Nº Splits (janelas)</span><input type="number" class="config-input" id="cfg_wf_splits" step="1"><button class="info-btn" onclick="showInfo('wf_splits')">?</button></div>
+            <div class="config-row"><span class="config-label">Train Ratio</span><input type="number" class="config-input" id="cfg_wf_train_ratio" step="0.01"><button class="info-btn" onclick="showInfo('wf_train_ratio')">?</button></div>
+            <div class="config-row"><span class="config-label">Mín. Janelas Passando</span><input type="number" class="config-input" id="cfg_wf_min_pass" step="1"><button class="info-btn" onclick="showInfo('wf_min_pass')">?</button></div>
+            <div class="config-row"><span class="config-label">Mín. Trades/Janela</span><input type="number" class="config-input" id="cfg_wf_min_trades_per_window" step="1"><button class="info-btn" onclick="showInfo('wf_min_trades_per_window')">?</button></div>
+        </div>
+
+        <!-- MONTE CARLO -->
+        <div class="config-group">
+            <div class="config-group-title">🎲 Monte Carlo</div>
+            <div class="config-row"><span class="config-label">Nº Simulações</span><input type="number" class="config-input" id="cfg_mc_simulations" step="100"><button class="info-btn" onclick="showInfo('mc_simulations')">?</button></div>
+            <div class="config-row"><span class="config-label">Nível Confiança</span><input type="number" class="config-input" id="cfg_mc_confidence" step="0.01"><button class="info-btn" onclick="showInfo('mc_confidence')">?</button></div>
+        </div>
+
+        <!-- KELLY -->
+        <div class="config-group">
+            <div class="config-group-title">📐 Kelly / Portfolio</div>
+            <div class="config-row"><span class="config-label">Fração Kelly</span><input type="number" class="config-input" id="cfg_kelly_fraction" step="0.05"><button class="info-btn" onclick="showInfo('kelly_fraction')">?</button></div>
+            <div class="config-row"><span class="config-label">Peso Mínimo</span><input type="number" class="config-input" id="cfg_min_weight" step="0.01"><button class="info-btn" onclick="showInfo('min_weight')">?</button></div>
+            <div class="config-row"><span class="config-label">Peso Máximo</span><input type="number" class="config-input" id="cfg_max_weight" step="0.01"><button class="info-btn" onclick="showInfo('max_weight')">?</button></div>
+        </div>
+
+        <!-- RISCO RUÍNA -->
+        <div class="config-group">
+            <div class="config-group-title">☠️ Risco de Ruína</div>
+            <div class="config-row"><span class="config-label">Threshold Ruína</span><input type="number" class="config-input" id="cfg_ruin_threshold" step="0.05"><button class="info-btn" onclick="showInfo('ruin_threshold')">?</button></div>
+            <div class="config-row"><span class="config-label">Nº Simulações</span><input type="number" class="config-input" id="cfg_ruin_simulations" step="100"><button class="info-btn" onclick="showInfo('ruin_simulations')">?</button></div>
+            <div class="config-row"><span class="config-label">Tamanho Posição</span><input type="number" class="config-input" id="cfg_position_pct" step="0.005"><button class="info-btn" onclick="showInfo('position_pct')">?</button></div>
+        </div>
+
+        <!-- ML -->
+        <div class="config-group">
+            <div class="config-group-title">🤖 Machine Learning</div>
+            <div class="config-row"><span class="config-label">Target Days</span><input type="number" class="config-input" id="cfg_target_days" step="1"><button class="info-btn" onclick="showInfo('target_days')">?</button></div>
+            <div class="config-row"><span class="config-label">Signal Threshold</span><input type="number" class="config-input" id="cfg_signal_threshold" step="0.01"><button class="info-btn" onclick="showInfo('signal_threshold')">?</button></div>
+            <div class="config-row"><span class="config-label">Meta Threshold</span><input type="number" class="config-input" id="cfg_meta_threshold" step="0.01"><button class="info-btn" onclick="showInfo('meta_threshold')">?</button></div>
+            <div class="config-row"><span class="config-label">HMM Regimes</span><input type="number" class="config-input" id="cfg_hmm_n_regimes" step="1"><button class="info-btn" onclick="showInfo('hmm_n_regimes')">?</button></div>
+        </div>
+
+        <!-- ENSEMBLE -->
+        <div class="config-group">
+            <div class="config-group-title">🧠 Ensemble</div>
+            <div class="config-row"><span class="config-label">XGB Estimators</span><input type="number" class="config-input" id="cfg_xgb_n_estimators" step="50"><button class="info-btn" onclick="showInfo('xgb_n_estimators')">?</button></div>
+            <div class="config-row"><span class="config-label">XGB Max Depth</span><input type="number" class="config-input" id="cfg_xgb_max_depth" step="1"><button class="info-btn" onclick="showInfo('xgb_max_depth')">?</button></div>
+            <div class="config-row"><span class="config-label">XGB Learn Rate</span><input type="number" class="config-input" id="cfg_xgb_learning_rate" step="0.01"><button class="info-btn" onclick="showInfo('xgb_learning_rate')">?</button></div>
+            <div class="config-row"><span class="config-label">LGBM Estimators</span><input type="number" class="config-input" id="cfg_lgbm_n_estimators" step="50"><button class="info-btn" onclick="showInfo('lgbm_n_estimators')">?</button></div>
+            <div class="config-row"><span class="config-label">LGBM Max Depth</span><input type="number" class="config-input" id="cfg_lgbm_max_depth" step="1"><button class="info-btn" onclick="showInfo('lgbm_max_depth')">?</button></div>
+            <div class="config-row"><span class="config-label">LGBM Learn Rate</span><input type="number" class="config-input" id="cfg_lgbm_learning_rate" step="0.01"><button class="info-btn" onclick="showInfo('lgbm_learning_rate')">?</button></div>
+            <div class="config-row"><span class="config-label">RF Estimators</span><input type="number" class="config-input" id="cfg_rf_n_estimators" step="50"><button class="info-btn" onclick="showInfo('rf_n_estimators')">?</button></div>
+            <div class="config-row"><span class="config-label">RF Max Depth</span><input type="number" class="config-input" id="cfg_rf_max_depth" step="1"><button class="info-btn" onclick="showInfo('rf_max_depth')">?</button></div>
+        </div>
+
+        <!-- RETRAIN -->
+        <div class="config-group">
+            <div class="config-group-title">🔄 Retrain Semanal</div>
+            <div class="config-row"><span class="config-label">WF Splits</span><input type="number" class="config-input" id="cfg_retrain_wf_splits" step="1"><button class="info-btn" onclick="showInfo('retrain_wf_splits')">?</button></div>
+            <div class="config-row"><span class="config-label">MC Simulações</span><input type="number" class="config-input" id="cfg_retrain_mc_simulations" step="100"><button class="info-btn" onclick="showInfo('retrain_mc_simulations')">?</button></div>
         </div>
     </div>
 
-    <!-- TABELA DE ATIVOS -->
-    <div id="assetsSection" class="section hidden">
-        <div class="section-title">
-            <span class="icon">🏆</span> Ativos Validados — Walk-Forward + Monte Carlo
-        </div>
-        <div class="card">
-            <div class="table-wrapper">
-                <table id="assetsTable">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Ativo</th>
-                            <th>Peso</th>
-                            <th>Sharpe OOS</th>
-                            <th>Profit Factor</th>
-                            <th>Win Rate</th>
-                            <th>Trades</th>
-                            <th>Avg Trade</th>
-                            <th>Max DD</th>
-                            <th>WF Score</th>
-                            <th>P(Lucro)</th>
-                            <th>P(2x)</th>
-                            <th>Growth</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- CAPITAL -->
-    <div id="capitalSection" class="section hidden">
-        <div class="section-title">
-            <span class="icon">💰</span> Projecao de Capital (1 Ano)
-        </div>
-        <div id="capitalGrid" class="capital-grid"></div>
-        <div class="suggested-box">
-            <div class="card-header" style="justify-content: center;">☄️ Capital Sugerido — HALLEY TRADE IA</div>
-            <div id="suggestedCapital" class="suggested-value">—</div>
-            <div class="card-sub" style="margin-top: 0.5rem;">
-                Baseado em Kelly Criterion fracional (50%) + risco de ruina + custos B3
-            </div>
-        </div>
-    </div>
-
-    <!-- FOOTER -->
     <div style="text-align: center; padding: 2rem 0; color: var(--text-dim); font-size: 0.75rem;">
-        ☄️ HALLEY TRADE IA v3.0 — Sistema Quantitativo Autonomo com Machine Learning<br>
-        XGBoost + LightGBM + Random Forest + HMM + Meta-Labeling + Walk-Forward + Monte Carlo + Markowitz + Kelly
+        ☄️ HALLEY TRADE IA v3.0 — Sistema Quantitativo Autônomo com Machine Learning
     </div>
 </div>
 
-<!-- ════════════════════════════════════════════════════════ -->
-<!-- JAVASCRIPT COMPLETO                                     -->
-<!-- ════════════════════════════════════════════════════════ -->
+<!-- INFO POPUP -->
+<div id="infoPopup" class="popup-overlay">
+    <div class="popup">
+        <h3 id="infoTitle"></h3>
+        <p id="infoText"></p>
+        <button class="close-btn" onclick="closeInfo()">Entendi</button>
+    </div>
+</div>
+
+<!-- SAVE POPUP -->
+<div id="savePopup" class="popup-overlay">
+    <div class="popup">
+        <h3>💾 Salvar Sessão Como</h3>
+        <p>Digite um nome para esta sessão:</p>
+        <input type="text" id="saveNameInput" class="save-input" placeholder="Ex: Teste Conservador">
+        <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+            <button class="btn btn-green btn-sm" onclick="confirmSave()">Salvar</button>
+            <button class="btn btn-secondary btn-sm" onclick="closeSavePopup()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
 <script>
-// ============================================================
-// CONFIGURACAO — ALTERE A URL ABAIXO PARA SEU HF SPACE
-// ============================================================
 const API_BASE = 'https://wanderhalleylee-halley-trade-ia.hf.space';
-// ============================================================
 
-let currentRunId = null;
-let pollInterval = null;
-let charts = {};
+const DEFAULT_CONFIG = {
+    capital: 50000,
+    tickers: ["PETR4.SA","VALE3.SA","ITUB4.SA","BBDC4.SA","ABEV3.SA","WEGE3.SA","RENT3.SA","EQTL3.SA","BBAS3.SA","SUZB3.SA","JBSS3.SA","RAIL3.SA","VIVT3.SA","RADL3.SA","GGBR4.SA","LREN3.SA","TOTS3.SA","HAPV3.SA","PRIO3.SA","CSAN3.SA"],
+    start_date: "2018-01-01", min_years: 3, min_data_points: 756,
+    cost_emolumentos: 0.000325, cost_corretagem: 0.0003, cost_slippage: 0.001, cost_per_side: 0.001625, cost_round_trip: 0.00325,
+    wf_splits: 4, wf_train_ratio: 0.75, wf_min_pass: 2, wf_min_trades_per_window: 10,
+    mc_simulations: 2000, mc_confidence: 0.05,
+    kelly_fraction: 0.50, min_weight: 0.05, max_weight: 0.35,
+    ruin_threshold: 0.50, ruin_simulations: 3000, position_pct: 0.02,
+    target_days: 5, signal_threshold: 0.52, meta_threshold: 0.48, hmm_n_regimes: 3,
+    xgb_n_estimators: 200, xgb_max_depth: 5, xgb_learning_rate: 0.05,
+    lgbm_n_estimators: 200, lgbm_max_depth: 5, lgbm_learning_rate: 0.05,
+    rf_n_estimators: 200, rf_max_depth: 8,
+    retrain_wf_splits: 7, retrain_mc_simulations: 3000,
+};
 
-// ── CLOCK ────────────────────────────────────
+const CONFIG_FIELDS = ['start_date','min_years','min_data_points','cost_emolumentos','cost_corretagem','cost_slippage','cost_per_side','cost_round_trip','wf_splits','wf_train_ratio','wf_min_pass','wf_min_trades_per_window','mc_simulations','mc_confidence','kelly_fraction','min_weight','max_weight','ruin_threshold','ruin_simulations','position_pct','target_days','signal_threshold','meta_threshold','hmm_n_regimes','xgb_n_estimators','xgb_max_depth','xgb_learning_rate','lgbm_n_estimators','lgbm_max_depth','lgbm_learning_rate','rf_n_estimators','rf_max_depth','retrain_wf_splits','retrain_mc_simulations'];
+
+const INFO_TEXTS = {
+    capital: {t:'Capital Operado (R$)', d:'Valor total em reais que você pretende operar com esta sessão. A IA usará esse valor para calcular: alocação por ativo (peso × capital), projeção de lucro em 1 ano, valor por posição, e capital sugerido via Kelly. Defina de forma realista para ter cálculos precisos.'},
+    start_date: {t:'Data de Início dos Dados', d:'Define a partir de quando o sistema baixa dados históricos. Dados mais antigos = mais treino, mas podem ser menos relevantes. Recomendado: 2018-01-01.'},
+    min_years: {t:'Mínimo de Anos', d:'Ativo precisa ter pelo menos este número de anos de dados para ser analisado.'},
+    min_data_points: {t:'Mínimo de Pontos', d:'Número mínimo de dias de cotação. ~252 dias por ano. Ex: 756 = 3 anos.'},
+    cost_emolumentos: {t:'Emolumentos B3', d:'Taxa da B3 por operação. ~0.0325% do volume.'},
+    cost_corretagem: {t:'Corretagem', d:'Taxa da corretora. Muitas oferecem zero. Padrão conservador: 0.03%.'},
+    cost_slippage: {t:'Slippage', d:'Diferença entre preço esperado e executado. Padrão: 0.10%.'},
+    cost_per_side: {t:'Custo por Lado', d:'Soma de emolumentos + corretagem + slippage para compra OU venda.'},
+    cost_round_trip: {t:'Custo Round-Trip', d:'Custo de ida e volta (compra + venda). Deduzido de cada trade.'},
+    wf_splits: {t:'Janelas Walk-Forward', d:'Divide os dados em N janelas. Cada uma treina no passado e testa no futuro. Mais janelas = mais robusto. Recomendado: 4-7.'},
+    wf_train_ratio: {t:'Ratio de Treino', d:'% de cada janela para treino. Restante é teste. 0.75 = 75% treino, 25% teste.'},
+    wf_min_pass: {t:'Mín. Janelas Aprovadas', d:'Ativo precisa passar em N janelas. Mais alto = mais rigoroso.'},
+    wf_min_trades_per_window: {t:'Mín. Trades/Janela', d:'Cada janela precisa gerar N+ sinais. Evita resultados insignificantes.'},
+    mc_simulations: {t:'Simulações Monte Carlo', d:'Quantas vezes embaralha os trades. Mais = mais preciso, mais lento. Recomendado: 1000-3000.'},
+    mc_confidence: {t:'Nível de Confiança', d:'Percentil para VaR. 0.05 = 95% confiança.'},
+    kelly_fraction: {t:'Fração Kelly', d:'Kelly Criterion calcula quanto apostar. 0.50 = "half-Kelly" (mais seguro).'},
+    min_weight: {t:'Peso Mínimo', d:'Peso mínimo por ativo na carteira. 0.05 = 5%.'},
+    max_weight: {t:'Peso Máximo', d:'Peso máximo por ativo. 0.35 = 35%.'},
+    ruin_threshold: {t:'Threshold Ruína', d:'Perda % considerada ruína. 0.50 = perder 50%.'},
+    ruin_simulations: {t:'Simulações Ruína', d:'Sequências simuladas para estimar prob. de ruína.'},
+    position_pct: {t:'Tamanho Posição', d:'% do capital por trade na simulação de ruína. 0.02 = 2%.'},
+    target_days: {t:'Target Days', d:'Horizonte de previsão em dias. 5 = 1 semana.'},
+    signal_threshold: {t:'Signal Threshold', d:'Probabilidade mínima do ensemble para gerar sinal. Mais alto = menos trades.'},
+    meta_threshold: {t:'Meta Threshold', d:'Filtro do Meta-Labeler. Segundo nível de aprovação.'},
+    hmm_n_regimes: {t:'Regimes HMM', d:'3 = Bull, Bear, Sideways. 2 = Bull/Bear.'},
+    xgb_n_estimators: {t:'XGBoost Estimators', d:'Nº de árvores. Recomendado: 100-300.'},
+    xgb_max_depth: {t:'XGBoost Depth', d:'Profundidade das árvores. Recomendado: 3-7.'},
+    xgb_learning_rate: {t:'XGBoost LR', d:'Taxa de aprendizado. Recomendado: 0.01-0.1.'},
+    lgbm_n_estimators: {t:'LightGBM Estimators', d:'Nº de árvores. Recomendado: 100-300.'},
+    lgbm_max_depth: {t:'LightGBM Depth', d:'Profundidade. Recomendado: 3-7.'},
+    lgbm_learning_rate: {t:'LightGBM LR', d:'Taxa de aprendizado. Recomendado: 0.01-0.1.'},
+    rf_n_estimators: {t:'Random Forest Estimators', d:'Nº de árvores. Recomendado: 100-500.'},
+    rf_max_depth: {t:'Random Forest Depth', d:'Profundidade. Recomendado: 5-12.'},
+    retrain_wf_splits: {t:'Retrain WF Splits', d:'Janelas no re-treino de domingo. Pode ser mais que o diário.'},
+    retrain_mc_simulations: {t:'Retrain MC Sims', d:'Simulações Monte Carlo no re-treino semanal.'},
+};
+
+let currentRunId = null, pollInterval = null, charts = {}, lastResultData = null;
+
+function init() {
+    updateClock(); setInterval(updateClock, 1000);
+    checkHealth(); setInterval(checkHealth, 60000);
+    initSessions();
+}
+
+function switchTab(tab, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    if (btn) btn.classList.add('active');
+}
+
 function updateClock() {
     const now = new Date();
     const br = now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const day = now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'short', day: '2-digit', month: 'short' });
-    document.getElementById('clock').textContent = `${day} ${br}`;
+    document.getElementById('clock').textContent = day + ' ' + br;
 }
-setInterval(updateClock, 1000);
-updateClock();
 
-// ── HEALTH CHECK ─────────────────────────────
 async function checkHealth() {
     const badge = document.getElementById('statusBadge');
     try {
-        const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(15000) });
-        const data = await res.json();
-        if (data.status === 'alive' && data.db_connected) {
-            badge.innerHTML = '<span class="status-dot"></span> Online · DB OK';
-            badge.className = 'status-badge status-online';
-        } else if (data.status === 'alive') {
-            badge.innerHTML = '<span class="status-dot"></span> Online · DB Erro';
-            badge.className = 'status-badge status-loading';
-        } else {
-            badge.innerHTML = '<span class="status-dot"></span> Erro';
-            badge.className = 'status-badge status-offline';
-        }
-    } catch (e) {
-        badge.innerHTML = '<span class="status-dot"></span> Offline';
-        badge.className = 'status-badge status-offline';
-    }
+        const res = await fetch(API_BASE + '/health', { signal: AbortSignal.timeout(15000) });
+        const d = await res.json();
+        if (d.status === 'alive' && d.db_connected) { badge.innerHTML = '<span class="status-dot"></span> Online · DB OK'; badge.className = 'status-badge status-online'; }
+        else if (d.status === 'alive') { badge.innerHTML = '<span class="status-dot"></span> Online · DB Erro'; badge.className = 'status-badge status-loading'; }
+        else { badge.innerHTML = '<span class="status-dot"></span> Erro'; badge.className = 'status-badge status-offline'; }
+    } catch { badge.innerHTML = '<span class="status-dot"></span> Offline'; badge.className = 'status-badge status-offline'; }
 }
-checkHealth();
-setInterval(checkHealth, 60000);
 
-// ── START RUN ────────────────────────────────
+function show(id, d) { const el = document.getElementById(id); if (el) { el.style.display = d || ''; el.classList.remove('hidden'); } }
+function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+function fmtBRL(v) { return 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
+function getSessionCapital() { const el = document.getElementById('cfg_capital'); return parseFloat(el?.value) || 50000; }
+
+function updateCapitalBanner() {
+    const cap = getSessionCapital();
+    document.getElementById('capitalBannerValue').textContent = fmtBRL(cap);
+    const name = document.getElementById('sessionSelect')?.value || 'Padrão';
+    document.getElementById('capitalBannerSession').textContent = 'Sessão: ' + name;
+    if (lastResultData) renderCapital(lastResultData);
+}
+
+// ── SESSIONS ──
+function getSessions() { try { return JSON.parse(localStorage.getItem('halley_sessions') || '{}'); } catch { return {}; } }
+function saveSessions(s) { localStorage.setItem('halley_sessions', JSON.stringify(s)); }
+function getActive() { return localStorage.getItem('halley_active_session') || 'Padrão'; }
+function setActive(n) { localStorage.setItem('halley_active_session', n); }
+
+function initSessions() {
+    const s = getSessions();
+    if (!s['Padrão']) { s['Padrão'] = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); saveSessions(s); }
+    refreshSelect(); const a = getActive();
+    document.getElementById('sessionSelect').value = a;
+    loadSessionData(s[a] || DEFAULT_CONFIG);
+}
+
+function refreshSelect() {
+    const sel = document.getElementById('sessionSelect'), s = getSessions(), a = getActive();
+    sel.innerHTML = '';
+    Object.keys(s).sort().forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n; if (n === a) o.selected = true; sel.appendChild(o); });
+}
+
+function loadSession() {
+    const n = document.getElementById('sessionSelect').value, s = getSessions();
+    if (s[n]) { loadSessionData(s[n]); setActive(n); }
+}
+
+function loadSessionData(cfg) {
+    renderTickers(cfg.tickers || DEFAULT_CONFIG.tickers);
+    document.getElementById('cfg_capital').value = cfg.capital !== undefined ? cfg.capital : DEFAULT_CONFIG.capital;
+    CONFIG_FIELDS.forEach(f => { const el = document.getElementById('cfg_' + f); if (el) el.value = cfg[f] !== undefined ? cfg[f] : DEFAULT_CONFIG[f]; });
+    updateCapitalBanner();
+}
+
+function gatherSessionData() {
+    const cfg = { capital: parseFloat(document.getElementById('cfg_capital').value) || 50000 };
+    cfg.tickers = [];
+    document.querySelectorAll('#tickerList .ticker-tag').forEach(t => { if (t.dataset.ticker) cfg.tickers.push(t.dataset.ticker); });
+    CONFIG_FIELDS.forEach(f => { const el = document.getElementById('cfg_' + f); if (el) { cfg[f] = el.type === 'date' ? el.value : (parseFloat(el.value) || 0); } });
+    return cfg;
+}
+
+function saveCurrentSession() {
+    const n = document.getElementById('sessionSelect').value; if (!n) return;
+    const s = getSessions(); s[n] = gatherSessionData(); saveSessions(s); setActive(n);
+    alert('Sessão "' + n + '" salva!');
+}
+
+function showSavePopup() { document.getElementById('savePopup').classList.add('show'); document.getElementById('saveNameInput').value = ''; document.getElementById('saveNameInput').focus(); }
+function closeSavePopup() { document.getElementById('savePopup').classList.remove('show'); }
+
+function confirmSave() {
+    const n = document.getElementById('saveNameInput').value.trim();
+    if (!n) { alert('Digite um nome.'); return; }
+    const s = getSessions(); s[n] = gatherSessionData(); saveSessions(s); setActive(n);
+    refreshSelect(); document.getElementById('sessionSelect').value = n; closeSavePopup();
+    alert('Sessão "' + n + '" salva!');
+}
+
+function deleteSession() {
+    const n = document.getElementById('sessionSelect').value;
+    if (n === 'Padrão') { alert('Sessão Padrão não pode ser excluída.'); return; }
+    if (!confirm('Excluir "' + n + '"?')) return;
+    const s = getSessions(); delete s[n]; saveSessions(s); setActive('Padrão');
+    refreshSelect(); document.getElementById('sessionSelect').value = 'Padrão';
+    loadSessionData(s['Padrão'] || DEFAULT_CONFIG);
+}
+
+function loadDefaultSession() {
+    if (!confirm('Restaurar valores padrão?')) return;
+    loadSessionData(JSON.parse(JSON.stringify(DEFAULT_CONFIG)));
+}
+
+// ── TICKERS ──
+function renderTickers(tickers) {
+    const l = document.getElementById('tickerList'); l.innerHTML = '';
+    (tickers || []).forEach(t => {
+        const tag = document.createElement('span'); tag.className = 'ticker-tag'; tag.dataset.ticker = t;
+        tag.innerHTML = t.replace('.SA','') + ' <button class="ticker-remove" onclick="this.parentElement.remove()" title="Remover">×</button>';
+        l.appendChild(tag);
+    });
+}
+
+function addTicker() {
+    const inp = document.getElementById('tickerAddInput');
+    let v = inp.value.trim().toUpperCase(); if (!v) return;
+    if (!v.endsWith('.SA')) v += '.SA';
+    const existing = []; document.querySelectorAll('#tickerList .ticker-tag').forEach(t => existing.push(t.dataset.ticker));
+    if (existing.includes(v)) { alert(v + ' já está na lista.'); return; }
+    const l = document.getElementById('tickerList'), tag = document.createElement('span');
+    tag.className = 'ticker-tag'; tag.dataset.ticker = v;
+    tag.innerHTML = v.replace('.SA','') + ' <button class="ticker-remove" onclick="this.parentElement.remove()" title="Remover">×</button>';
+    l.appendChild(tag); inp.value = ''; inp.focus();
+}
+
+// ── POPUPS ──
+function showInfo(k) { const i = INFO_TEXTS[k]; if (!i) return; document.getElementById('infoTitle').textContent = i.t; document.getElementById('infoText').textContent = i.d; document.getElementById('infoPopup').classList.add('show'); }
+function closeInfo() { document.getElementById('infoPopup').classList.remove('show'); }
+
+// ── API CONFIG ──
+function getApiConfig() {
+    const c = gatherSessionData();
+    const o = {}; CONFIG_FIELDS.forEach(f => { if (c[f] !== undefined) o[f] = c[f]; });
+    return { tickers: c.tickers, config_override: o };
+}
+
+// ── RUNS ──
 async function startRun() {
-    const btn = document.getElementById('btnRun');
-    btn.disabled = true;
-    btn.innerHTML = '<span>⏳</span> Processando...';
-
-    show('logSection');
-    show('progressContainer', 'block');
-    document.getElementById('logBox').innerHTML = '';
-    document.getElementById('progressFill').style.width = '0%';
-
+    const btn = document.getElementById('btnRun'); btn.disabled = true; btn.innerHTML = '<span>⏳</span> Processando...';
+    show('logSection'); show('progressContainer', 'block');
+    document.getElementById('logBox').innerHTML = ''; document.getElementById('progressFill').style.width = '0%';
     try {
-        const res = await fetch(`${API_BASE}/run`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({})
-        });
-        const data = await res.json();
-        currentRunId = data.run_id;
-        pollInterval = setInterval(pollStatus, 2500);
-    } catch (e) {
-        alert('Erro ao conectar com o backend: ' + e.message);
-        btn.disabled = false;
-        btn.innerHTML = '<span>▶</span> Iniciar Analise';
-    }
+        const res = await fetch(API_BASE + '/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(getApiConfig()) });
+        const d = await res.json(); currentRunId = d.run_id; pollInterval = setInterval(pollStatus, 2500);
+    } catch (e) { alert('Erro: ' + e.message); btn.disabled = false; btn.innerHTML = '<span>▶</span> Iniciar Analise'; }
 }
 
-// ── FORCE DAILY ──────────────────────────────
 async function forceDaily() {
-    if (!confirm('Forcar analise diaria agora?')) return;
+    if (!confirm('Forcar diaria agora?')) return;
     try {
-        const res = await fetch(`${API_BASE}/force-daily`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({})
-        });
-        const data = await res.json();
-        currentRunId = data.run_id;
-        show('logSection');
-        show('progressContainer', 'block');
+        const res = await fetch(API_BASE + '/force-daily', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+        const d = await res.json(); currentRunId = d.run_id;
+        show('logSection'); show('progressContainer', 'block');
         document.getElementById('logBox').innerHTML = '';
-        document.getElementById('btnRun').disabled = true;
-        document.getElementById('btnRun').innerHTML = '<span>⏳</span> Processando...';
+        document.getElementById('btnRun').disabled = true; document.getElementById('btnRun').innerHTML = '<span>⏳</span> Processando...';
         pollInterval = setInterval(pollStatus, 2500);
-    } catch (e) {
-        alert('Erro: ' + e.message);
-    }
+    } catch (e) { alert('Erro: ' + e.message); }
 }
 
-// ── POLL STATUS ──────────────────────────────
 async function pollStatus() {
     if (!currentRunId) return;
     try {
-        const res = await fetch(`${API_BASE}/status/${currentRunId}`);
-        const data = await res.json();
-
-        // Progress
-        const pct = data.progress || 0;
-        document.getElementById('progressFill').style.width = `${pct}%`;
-        document.getElementById('progressPct').textContent = `${pct}%`;
-        document.getElementById('progressPhase').textContent = data.phase || '';
-        document.getElementById('phaseText').textContent = data.phase || '';
-
-        // Logs
-        const logBox = document.getElementById('logBox');
-        logBox.innerHTML = (data.logs || []).map(l => `<p class="log-line">${escapeHtml(l)}</p>`).join('');
-        logBox.scrollTop = logBox.scrollHeight;
-
-        // Finished?
-        if (data.status === 'completed' || data.status === 'failed') {
+        const res = await fetch(API_BASE + '/status/' + currentRunId); const d = await res.json();
+        document.getElementById('progressFill').style.width = (d.progress||0) + '%';
+        document.getElementById('progressPct').textContent = (d.progress||0) + '%';
+        document.getElementById('progressPhase').textContent = d.phase || '';
+        document.getElementById('phaseText').textContent = d.phase || '';
+        const lb = document.getElementById('logBox');
+        lb.innerHTML = (d.logs||[]).map(l => '<p class="log-line">' + escapeHtml(l) + '</p>').join('');
+        lb.scrollTop = lb.scrollHeight;
+        if (d.status === 'completed' || d.status === 'failed') {
             clearInterval(pollInterval);
-            const btn = document.getElementById('btnRun');
-            btn.disabled = false;
-            btn.innerHTML = '<span>▶</span> Iniciar Analise';
-
-            if (data.status === 'completed') {
-                loadResults(currentRunId);
-            }
+            document.getElementById('btnRun').disabled = false; document.getElementById('btnRun').innerHTML = '<span>▶</span> Iniciar Analise';
+            if (d.status === 'completed') loadResults(currentRunId);
         }
-    } catch (e) {
-        console.error('Poll error:', e);
-    }
+    } catch (e) { console.error(e); }
 }
 
-// ── LOAD RESULTS ─────────────────────────────
-async function loadResults(runId) {
+async function loadResults(id) {
     try {
-        const res = await fetch(`${API_BASE}/results/${runId}`);
-        const data = await res.json();
-        if (data.assets && Object.keys(data.assets).length > 0) {
-            renderAll(data);
-        } else if (data.message) {
-            document.getElementById('phaseText').textContent = data.message;
-        }
-    } catch (e) {
-        console.error('Results error:', e);
-    }
+        const res = await fetch(API_BASE + '/results/' + id); const d = await res.json();
+        if (d.assets && Object.keys(d.assets).length > 0) { lastResultData = d; renderAll(d); }
+        else if (d.message) document.getElementById('phaseText').textContent = d.message;
+    } catch (e) { console.error(e); }
 }
 
-// ── LOAD HISTORY ─────────────────────────────
 async function loadHistory() {
     try {
-        const res = await fetch(`${API_BASE}/history`);
-        const data = await res.json();
-        if (data.runs && data.runs.length > 0) {
-            // Buscar resultado da ultima rodada completa
-            for (const run of data.runs) {
+        const res = await fetch(API_BASE + '/history'); const d = await res.json();
+        if (d.runs && d.runs.length > 0) {
+            for (const run of d.runs) {
                 if (run.status === 'completed' && run.id) {
-                    try {
-                        const rres = await fetch(`${API_BASE}/results/${run.id}`);
-                        const rdata = await rres.json();
-                        if (rdata.assets && Object.keys(rdata.assets).length > 0) {
-                            renderAll(rdata);
-                            return;
-                        }
-                    } catch (e) { continue; }
+                    try { const r = await fetch(API_BASE + '/results/' + run.id); const rd = await r.json();
+                        if (rd.assets && Object.keys(rd.assets).length > 0) { lastResultData = rd; renderAll(rd); return; }
+                    } catch { continue; }
                 }
             }
-            alert('Nenhuma rodada com resultados encontrada.');
-        } else {
-            alert('Nenhuma rodada no historico.');
-        }
-    } catch (e) {
-        alert('Erro: ' + e.message);
-    }
+            alert('Nenhuma rodada com resultados.');
+        } else alert('Historico vazio.');
+    } catch (e) { alert('Erro: ' + e.message); }
 }
 
-// ── LOAD SCHEDULER ───────────────────────────
 async function loadScheduler() {
     try {
-        const res = await fetch(`${API_BASE}/scheduler`);
-        const data = await res.json();
-        const grid = document.getElementById('schedulerGrid');
-
-        const scheduleInfo = data.schedule || {};
-        const jobs = data.jobs || [];
-
-        let html = '';
-        for (const job of jobs) {
-            const info = scheduleInfo[job.id] || job.trigger;
-            html += `
-                <div class="schedule-card">
-                    <div class="job-name">${job.id.replace('halley_', '').replace(/_/g, ' ').toUpperCase()}</div>
-                    <div class="job-detail">${info}</div>
-                    <div class="job-next">Proxima: ${job.next_run || '—'}</div>
-                </div>
-            `;
-        }
-
-        if (!jobs.length) {
-            html = '<div class="schedule-card"><div class="job-name">Nenhum job encontrado</div></div>';
-        }
-
-        html += `
-            <div class="schedule-card">
-                <div class="job-name">STATUS</div>
-                <div class="job-detail">Scheduler: ${data.scheduler_running ? '✅ Ativo' : '❌ Inativo'}</div>
-                <div class="job-next">Timezone: ${data.timezone || 'N/A'}</div>
-            </div>
-        `;
-
-        grid.innerHTML = html;
-        show('schedulerSection');
-    } catch (e) {
-        alert('Erro ao carregar scheduler: ' + e.message);
-    }
+        const res = await fetch(API_BASE + '/scheduler'); const d = await res.json();
+        const g = document.getElementById('schedulerGrid'), si = d.schedule || {}, jobs = d.jobs || [];
+        let h = '';
+        for (const j of jobs) h += '<div class="schedule-card"><div class="job-name">' + j.id.replace('halley_','').replace(/_/g,' ').toUpperCase() + '</div><div class="job-detail">' + (si[j.id]||j.trigger) + '</div><div class="job-next">Proxima: ' + (j.next_run||'—') + '</div></div>';
+        if (!jobs.length) h = '<div class="schedule-card"><div class="job-name">Nenhum job</div></div>';
+        h += '<div class="schedule-card"><div class="job-name">STATUS</div><div class="job-detail">Scheduler: ' + (d.scheduler_running ? '✅ Ativo' : '❌ Inativo') + '</div><div class="job-next">TZ: ' + (d.timezone||'N/A') + '</div></div>';
+        g.innerHTML = h; show('schedulerSection');
+    } catch (e) { alert('Erro: ' + e.message); }
 }
 
-// ── RENDER ALL ───────────────────────────────
-function renderAll(data) {
-    renderKPIs(data);
-    renderCharts(data);
-    renderTable(data);
-    renderCapital(data);
+// ── RENDER ──
+function renderAll(d) { renderKPIs(d); renderCharts(d); renderTable(d); renderCapital(d); }
+
+function renderKPIs(d) {
+    show('kpiSection'); show('kpiExtraSection');
+    document.getElementById('kpiValidated').textContent = d.validated_assets || 0;
+    document.getElementById('kpiTotal').textContent = 'de ' + (d.total_assets||0) + ' analisados';
+    const sh = d.portfolio?.portfolio_sharpe || 0, el = document.getElementById('kpiSharpe');
+    el.textContent = sh.toFixed(3); el.className = 'card-value ' + (sh>0.5?'green':sh>0?'yellow':'red');
+    const ret = d.annual_return_est || 0, re = document.getElementById('kpiReturn');
+    re.textContent = (ret*100).toFixed(1)+'%'; re.className = 'card-value ' + (ret>0?'green':'red');
+    const ruin = d.risk?.risk_of_ruin || 0, ru = document.getElementById('kpiRuin');
+    ru.textContent = (ruin*100).toFixed(2)+'%'; ru.className = 'card-value ' + (ruin<0.05?'green':ruin<0.15?'yellow':'red');
+    document.getElementById('kpiKelly').textContent = ((d.portfolio?.kelly_total||0)*100).toFixed(1)+'%';
+    document.getElementById('kpiTrades').textContent = d.trades_per_year || '—';
+    const dur = d.duration_seconds||0;
+    document.getElementById('kpiDuration').textContent = Math.floor(dur/60)+'m '+Math.floor(dur%60)+'s';
+    document.getElementById('kpiCosts').textContent = ((d.config_used?.cost_round_trip||0.00325)*100).toFixed(3)+'%';
 }
 
-// ── RENDER KPIs ──────────────────────────────
-function renderKPIs(data) {
-    show('kpiSection');
-    show('kpiExtraSection');
-
-    document.getElementById('kpiValidated').textContent = data.validated_assets || 0;
-    document.getElementById('kpiTotal').textContent = `de ${data.total_assets || 0} analisados`;
-
-    const sharpe = data.portfolio?.portfolio_sharpe || 0;
-    const el = document.getElementById('kpiSharpe');
-    el.textContent = sharpe.toFixed(3);
-    el.className = `card-value ${sharpe > 0.5 ? 'green' : sharpe > 0 ? 'yellow' : 'red'}`;
-
-    const ret = data.annual_return_est || 0;
-    const retEl = document.getElementById('kpiReturn');
-    retEl.textContent = `${(ret * 100).toFixed(1)}%`;
-    retEl.className = `card-value ${ret > 0 ? 'green' : 'red'}`;
-
-    const ruin = data.risk?.risk_of_ruin || 0;
-    const ruinEl = document.getElementById('kpiRuin');
-    ruinEl.textContent = `${(ruin * 100).toFixed(2)}%`;
-    ruinEl.className = `card-value ${ruin < 0.05 ? 'green' : ruin < 0.15 ? 'yellow' : 'red'}`;
-
-    const kelly = data.portfolio?.kelly_total || 0;
-    document.getElementById('kpiKelly').textContent = `${(kelly * 100).toFixed(1)}%`;
-
-    document.getElementById('kpiTrades').textContent = data.trades_per_year || '—';
-
-    const dur = data.duration_seconds || 0;
-    const mins = Math.floor(dur / 60);
-    const secs = Math.floor(dur % 60);
-    document.getElementById('kpiDuration').textContent = `${mins}m ${secs}s`;
-
-    const cost = data.config_used?.cost_round_trip || 0.00325;
-    document.getElementById('kpiCosts').textContent = `${(cost * 100).toFixed(3)}%`;
+function renderCharts(d) {
+    show('chartSection'); show('chartExtraSection');
+    const w = d.portfolio?.weights||{}, a = d.assets||{}, t = Object.keys(a), tl = t.map(x=>x.replace('.SA',''));
+    const cl = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#84cc16','#f97316','#14b8a6','#e11d48','#a855f7','#22d3ee','#eab308','#d946ef','#0ea5e9','#65a30d','#dc2626','#7c3aed','#059669'];
+    if(charts.allocation)charts.allocation.destroy();
+    charts.allocation=new Chart(document.getElementById('chartAllocation'),{type:'doughnut',data:{labels:Object.keys(w).map(x=>x.replace('.SA','')),datasets:[{data:Object.values(w).map(v=>(v*100).toFixed(1)),backgroundColor:cl,borderWidth:0,hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{color:'#94a3b8',font:{size:11},padding:8,usePointStyle:true}},tooltip:{callbacks:{label:c=>' '+c.label+': '+c.raw+'%'}}}}});
+    if(charts.mc)charts.mc.destroy();
+    charts.mc=new Chart(document.getElementById('chartMonteCarlo'),{type:'bar',data:{labels:tl,datasets:[{label:'P(Lucro)%',data:t.map(x=>((a[x].mc?.prob_profitable||0)*100).toFixed(1)),backgroundColor:t.map(x=>{const p=a[x].mc?.prob_profitable||0;return p>0.7?'#10b981':p>0.5?'#f59e0b':'#ef4444';}),borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:t.length>10?'y':'x',scales:{y:{ticks:{color:'#64748b'},grid:{color:'rgba(255,255,255,0.03)'}},x:{ticks:{color:'#64748b'},grid:{color:'rgba(255,255,255,0.03)'}}},plugins:{legend:{display:false}}}});
+    if(charts.sharpe)charts.sharpe.destroy();
+    const sd=t.map(x=>a[x].sharpe_oos||0);
+    charts.sharpe=new Chart(document.getElementById('chartSharpe'),{type:'bar',data:{labels:tl,datasets:[{label:'Sharpe',data:sd.map(v=>v.toFixed(3)),backgroundColor:sd.map(v=>v>0.5?'#10b981':v>0?'#f59e0b':'#ef4444'),borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{ticks:{color:'#64748b'},grid:{color:'rgba(255,255,255,0.03)'}},x:{ticks:{color:'#64748b'},grid:{display:false}}},plugins:{legend:{display:false}}}});
+    if(charts.dd)charts.dd.destroy();
+    charts.dd=new Chart(document.getElementById('chartDrawdown'),{type:'bar',data:{labels:tl,datasets:[{label:'Max DD%',data:t.map(x=>((a[x].max_drawdown||0)*100).toFixed(1)),backgroundColor:t.map(x=>{const dd=a[x].max_drawdown||0;return dd<0.1?'#10b981':dd<0.2?'#f59e0b':'#ef4444';}),borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{ticks:{color:'#64748b'},grid:{color:'rgba(255,255,255,0.03)'}},x:{ticks:{color:'#64748b'},grid:{display:false}}},plugins:{legend:{display:false}}}});
 }
 
-// ── RENDER CHARTS ────────────────────────────
-function renderCharts(data) {
-    show('chartSection');
-    show('chartExtraSection');
-
-    const weights = data.portfolio?.weights || {};
-    const assets = data.assets || {};
-    const tickers = Object.keys(assets);
-    const tickerLabels = tickers.map(t => t.replace('.SA', ''));
-
-    const colors = [
-        '#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6',
-        '#ec4899','#06b6d4','#84cc16','#f97316','#14b8a6',
-        '#e11d48','#a855f7','#22d3ee','#eab308','#d946ef',
-        '#0ea5e9','#65a30d','#dc2626','#7c3aed','#059669'
-    ];
-
-    // Allocation chart
-    if (charts.allocation) charts.allocation.destroy();
-    charts.allocation = new Chart(document.getElementById('chartAllocation'), {
-        type: 'doughnut',
-        data: {
-            labels: Object.keys(weights).map(t => t.replace('.SA', '')),
-            datasets: [{
-                data: Object.values(weights).map(v => (v * 100).toFixed(1)),
-                backgroundColor: colors,
-                borderWidth: 0,
-                hoverOffset: 8,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '65%',
-            plugins: {
-                legend: {
-                    position: 'right',
-                    labels: { color: '#94a3b8', font: { size: 11 }, padding: 8, usePointStyle: true, pointStyleWidth: 10 }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: ctx => ` ${ctx.label}: ${ctx.raw}%`
-                    }
-                }
-            }
-        }
-    });
-
-    // Monte Carlo probability
-    if (charts.mc) charts.mc.destroy();
-    charts.mc = new Chart(document.getElementById('chartMonteCarlo'), {
-        type: 'bar',
-        data: {
-            labels: tickerLabels,
-            datasets: [{
-                label: 'P(Lucro) %',
-                data: tickers.map(t => ((assets[t].mc?.prob_profitable || 0) * 100).toFixed(1)),
-                backgroundColor: tickers.map((t, i) => {
-                    const p = assets[t].mc?.prob_profitable || 0;
-                    return p > 0.7 ? '#10b981' : p > 0.5 ? '#f59e0b' : '#ef4444';
-                }),
-                borderRadius: 6,
-                borderSkipped: false,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            indexAxis: tickers.length > 10 ? 'y' : 'x',
-            scales: {
-                y: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.03)' } },
-                x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.03)' } }
-            },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: { label: ctx => ` Prob. Lucro: ${ctx.raw}%` }
-                }
-            }
-        }
-    });
-
-    // Sharpe chart
-    if (charts.sharpe) charts.sharpe.destroy();
-    const sharpeData = tickers.map(t => assets[t].sharpe_oos || 0);
-    charts.sharpe = new Chart(document.getElementById('chartSharpe'), {
-        type: 'bar',
-        data: {
-            labels: tickerLabels,
-            datasets: [{
-                label: 'Sharpe OOS',
-                data: sharpeData.map(v => v.toFixed(3)),
-                backgroundColor: sharpeData.map(v => v > 0.5 ? '#10b981' : v > 0 ? '#f59e0b' : '#ef4444'),
-                borderRadius: 6,
-                borderSkipped: false,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.03)' } },
-                x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { display: false } }
-            },
-            plugins: { legend: { display: false } }
-        }
-    });
-
-    // Drawdown chart
-    if (charts.dd) charts.dd.destroy();
-    charts.dd = new Chart(document.getElementById('chartDrawdown'), {
-        type: 'bar',
-        data: {
-            labels: tickerLabels,
-            datasets: [{
-                label: 'Max Drawdown %',
-                data: tickers.map(t => ((assets[t].max_drawdown || 0) * 100).toFixed(1)),
-                backgroundColor: tickers.map(t => {
-                    const dd = assets[t].max_drawdown || 0;
-                    return dd < 0.1 ? '#10b981' : dd < 0.2 ? '#f59e0b' : '#ef4444';
-                }),
-                borderRadius: 6,
-                borderSkipped: false,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.03)' } },
-                x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { display: false } }
-            },
-            plugins: { legend: { display: false } }
-        }
-    });
-}
-
-// ── RENDER TABLE ─────────────────────────────
-function renderTable(data) {
+function renderTable(d) {
     show('assetsSection');
-    const tbody = document.querySelector('#assetsTable tbody');
-    tbody.innerHTML = '';
-
-    const assets = data.assets || {};
-    const sorted = Object.entries(assets).sort((a, b) => (b[1].sharpe_oos || 0) - (a[1].sharpe_oos || 0));
-
-    sorted.forEach(([ticker, a], idx) => {
-        const row = document.createElement('tr');
-        const pp = ((a.mc?.prob_profitable || 0) * 100).toFixed(0);
-        const pd = ((a.mc?.prob_double || 0) * 100).toFixed(0);
-        const gr = (a.mc?.expected_growth || 1).toFixed(2);
-        const sh = (a.sharpe_oos || 0);
-        const wr = ((a.win_rate || 0) * 100).toFixed(1);
-        const dd = ((a.max_drawdown || 0) * 100).toFixed(1);
-        const wf = `${a.windows_passed || 0}/${a.windows_total || 0}`;
-        const wt = ((a.weight || 0) * 100).toFixed(1);
-        const at = a.avg_trade ? (a.avg_trade * 100).toFixed(3) : '—';
-
-        row.innerHTML = `
-            <td style="color: var(--text-dim);">${idx + 1}</td>
-            <td class="ticker-cell">${ticker.replace('.SA', '')}</td>
-            <td><strong>${wt}%</strong></td>
-            <td class="${sh > 0.5 ? 'green' : sh > 0 ? 'yellow' : 'red'}">${sh.toFixed(3)}</td>
-            <td>${(a.profit_factor_oos || 0).toFixed(2)}</td>
-            <td class="${parseFloat(wr) > 50 ? 'green' : 'yellow'}">${wr}%</td>
-            <td>${a.total_trades || 0}</td>
-            <td>${at}%</td>
-            <td class="red">${dd}%</td>
-            <td class="${a.windows_passed >= 3 ? 'green' : 'yellow'}">${wf}</td>
-            <td class="${parseFloat(pp) > 60 ? 'green' : 'yellow'}">${pp}%</td>
-            <td class="${parseFloat(pd) > 20 ? 'green' : 'yellow'}">${pd}%</td>
-            <td class="cyan">${gr}x</td>
-        `;
-        tbody.appendChild(row);
-    });
+    const a = d.assets||{}, w = d.portfolio?.weights||{}, cap = getSessionCapital();
+    const tb = document.querySelector('#assetsTable tbody'); tb.innerHTML = ''; let i = 1;
+    const sorted = Object.entries(a).sort((a,b)=>(b[1].sharpe_oos||0)-(a[1].sharpe_oos||0));
+    for (const [tk,v] of sorted) {
+        const wt = w[tk]||0, alloc = cap * wt, mc = v.mc||{};
+        tb.innerHTML += '<tr><td>'+i+++'</td><td class="ticker-cell">'+tk.replace('.SA','')+'</td><td>'+(wt*100).toFixed(1)+'%</td><td class="green">'+fmtBRL(alloc)+'</td><td class="'+(v.sharpe_oos>0.5?'green':v.sharpe_oos>0?'yellow':'red')+'">'+(v.sharpe_oos||0).toFixed(3)+'</td><td>'+(v.profit_factor||0).toFixed(2)+'</td><td>'+((v.win_rate||0)*100).toFixed(1)+'%</td><td>'+(v.total_trades||0)+'</td><td>'+((v.avg_trade||0)*100).toFixed(3)+'%</td><td class="red">'+((v.max_drawdown||0)*100).toFixed(1)+'%</td><td>'+((v.consistency||0)*100).toFixed(0)+'%</td><td class="'+((mc.prob_profitable||0)>0.7?'green':'yellow')+'">'+((mc.prob_profitable||0)*100).toFixed(0)+'%</td><td class="green">'+(mc.expected_growth||0).toFixed(2)+'x</td></tr>';
+    }
 }
 
-// ── RENDER CAPITAL ───────────────────────────
-function renderCapital(data) {
+function renderCapital(d) {
     show('capitalSection');
-    const grid = document.getElementById('capitalGrid');
-    grid.innerHTML = '';
+    const ret = d.annual_return_est || 0, cap = getSessionCapital(), kelly = d.portfolio?.kelly_total || 0;
+    const ruin = d.risk?.risk_of_ruin || 0;
 
-    const projections = data.projections || {};
-    for (const [label, info] of Object.entries(projections)) {
-        if (typeof info === 'object') {
-            grid.innerHTML += `
-                <div class="capital-card">
-                    <div class="capital-label">${label}</div>
-                    <div class="capital-invested">${info.investido}</div>
-                    <div class="capital-projected">${info.projetado_1ano}</div>
-                    <div class="capital-profit">Lucro: ${info.lucro_estimado} (${info.retorno})</div>
-                </div>
-            `;
-        } else {
-            grid.innerHTML += `
-                <div class="capital-card">
-                    <div class="capital-label">${label}</div>
-                    <div class="capital-projected">${info}</div>
-                </div>
-            `;
-        }
-    }
+    // Projeção com o capital da sessão
+    const projected = cap * (1 + ret);
+    const profit = projected - cap;
+    const kellyCapital = kelly > 0 ? cap * kelly : cap;
 
-    document.getElementById('suggestedCapital').textContent = data.suggested_capital || '—';
+    // Grid com múltiplos cenários baseados no capital real
+    const fractions = [0.25, 0.50, 0.75, 1.0];
+    const g = document.getElementById('capitalGrid');
+    g.innerHTML = fractions.map(f => {
+        const inv = cap * f;
+        const proj = inv * (1 + ret);
+        const pft = proj - inv;
+        const isMain = f === 1.0;
+        return '<div class="capital-card' + (isMain ? ' active-capital' : '') + '"><div class="capital-label">' + (isMain ? '100% Capital' : (f*100)+'% Capital') + '</div><div class="capital-invested">' + fmtBRL(inv) + '</div><div class="capital-projected">' + fmtBRL(proj) + '</div><div class="capital-profit">+' + fmtBRL(pft) + ' (' + (ret*100).toFixed(1) + '%)</div></div>';
+    }).join('');
+
+    // Box principal
+    document.getElementById('suggestedCapital').textContent = fmtBRL(projected);
+    document.getElementById('suggestedSub').textContent = 'Capital ' + fmtBRL(cap) + ' → Projeção 1 ano com retorno de ' + (ret*100).toFixed(1) + '%';
+
+    const details = document.getElementById('capitalDetails');
+    details.innerHTML =
+        '<div class="capital-detail-item"><div class="capital-detail-label">Investido</div><div class="capital-detail-value" style="color:var(--text);">' + fmtBRL(cap) + '</div></div>' +
+        '<div class="capital-detail-item"><div class="capital-detail-label">Lucro Est.</div><div class="capital-detail-value green">+' + fmtBRL(profit) + '</div></div>' +
+        '<div class="capital-detail-item"><div class="capital-detail-label">Kelly Recomenda</div><div class="capital-detail-value cyan">' + fmtBRL(kellyCapital) + '</div></div>' +
+        '<div class="capital-detail-item"><div class="capital-detail-label">Risco Ruína</div><div class="capital-detail-value ' + (ruin<0.05?'green':ruin<0.15?'yellow':'red') + '">' + (ruin*100).toFixed(2) + '%</div></div>';
 }
 
-// ── HELPERS ──────────────────────────────────
-function show(id, display) {
-    const el = document.getElementById(id);
-    if (el) {
-        el.classList.remove('hidden');
-        if (display) el.style.display = display;
-    }
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
+init();
 </script>
 </body>
 </html>
