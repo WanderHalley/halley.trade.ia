@@ -3,1394 +3,1224 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HALLEY TRADE IA v3.0</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌌</text></svg>">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <title>HALLEY TRADE IA — Dashboard</title>
+    <meta name="description" content="Sistema Quantitativo Autônomo com Machine Learning">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☄️</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+        /* ============================================================
+           HALLEY TRADE IA — CSS COMPLETO
+           Design: Dark Glassmorphism
+           ============================================================ */
         :root {
-            --bg: #0a0e1a; --bg2: #111827; --bg3: #1a1f35; --bg4: #232942;
-            --border: #2a3050; --border2: #3a4070;
-            --text: #e2e8f0; --text2: #94a3b8; --text3: #64748b;
-            --green: #10b981; --green2: #059669; --green-bg: rgba(16,185,129,0.1);
-            --red: #ef4444; --red2: #dc2626; --red-bg: rgba(239,68,68,0.1);
-            --blue: #3b82f6; --blue2: #2563eb; --blue-bg: rgba(59,130,246,0.1);
-            --yellow: #f59e0b; --yellow-bg: rgba(245,158,11,0.1);
-            --purple: #8b5cf6; --purple-bg: rgba(139,92,246,0.1);
-            --cyan: #06b6d4; --cyan-bg: rgba(6,182,212,0.1);
-            --pink: #ec4899;
-            --radius: 12px; --radius-sm: 8px;
-            --shadow: 0 4px 24px rgba(0,0,0,0.3);
-            --font: 'Inter', sans-serif; --mono: 'JetBrains Mono', monospace;
+            --bg-primary: #050a18;
+            --bg-secondary: #0a1128;
+            --bg-card: rgba(15, 23, 55, 0.75);
+            --bg-card-hover: rgba(20, 30, 70, 0.85);
+            --bg-glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(99, 102, 241, 0.15);
+            --border-hover: rgba(99, 102, 241, 0.35);
+            --accent: #6366f1;
+            --accent-light: #818cf8;
+            --accent-glow: rgba(99, 102, 241, 0.25);
+            --green: #10b981;
+            --green-light: #34d399;
+            --green-glow: rgba(16, 185, 129, 0.2);
+            --red: #ef4444;
+            --red-light: #f87171;
+            --red-glow: rgba(239, 68, 68, 0.2);
+            --yellow: #f59e0b;
+            --yellow-light: #fbbf24;
+            --cyan: #06b6d4;
+            --purple: #a855f7;
+            --text: #e2e8f0;
+            --text-muted: #64748b;
+            --text-dim: #475569;
+            --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --font-mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-xs: 6px;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --shadow-glow: 0 0 30px var(--accent-glow);
         }
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
 
-        /* Header */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg-primary);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Fundo animado */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(6, 182, 212, 0.03) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── HEADER ──────────────────────────────── */
         .header {
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
-            padding: 30px 20px 20px;
-            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(5, 10, 24, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .header h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; }
-        .header h1 span { background: linear-gradient(90deg, var(--cyan), var(--blue), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .header .subtitle { color: var(--text2); font-size: 0.85rem; margin-top: 4px; }
-        .status-bar { display: flex; gap: 16px; justify-content: center; margin-top: 12px; flex-wrap: wrap; align-items: center; }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
-        .status-dot.green { background: var(--green); box-shadow: 0 0 8px var(--green); }
-        .status-dot.red { background: var(--red); box-shadow: 0 0 8px var(--red); }
-        .status-dot.yellow { background: var(--yellow); box-shadow: 0 0 8px var(--yellow); }
-        .status-item { font-size: 0.8rem; color: var(--text2); }
-        .clock { font-family: var(--mono); color: var(--cyan); font-size: 0.8rem; }
 
-        /* Tabs */
-        .tabs {
-            display: flex; justify-content: center; gap: 8px;
-            padding: 12px 20px; background: var(--bg2);
-            border-bottom: 1px solid var(--border);
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
-        .tab {
-            padding: 10px 24px; border-radius: var(--radius-sm);
-            cursor: pointer; font-size: 0.9rem; font-weight: 600;
-            color: var(--text2); transition: all 0.3s;
-            border: 1px solid transparent;
-        }
-        .tab:hover { color: var(--text); background: var(--bg3); }
-        .tab.active { color: var(--cyan); background: var(--bg3); border-color: var(--cyan); }
-        .tab-content { display: none; padding: 20px; max-width: 1400px; margin: 0 auto; }
-        .tab-content.active { display: block; }
 
-        /* Cards / Panels */
-        .panel {
-            background: var(--bg2); border: 1px solid var(--border);
-            border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
+        .logo-icon {
+            font-size: 1.8rem;
+            filter: drop-shadow(0 0 8px var(--accent-glow));
         }
-        .panel-title { font-size: 1rem; font-weight: 700; margin-bottom: 12px; color: var(--text); }
 
-        /* Action Bar */
-        .action-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+        .logo h1 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--accent-light), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo .version {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            font-weight: 400;
+            margin-left: 0.3rem;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .status-badge {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-online {
+            background: var(--green-glow);
+            color: var(--green-light);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .status-online .status-dot { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+
+        .status-offline {
+            background: var(--red-glow);
+            color: var(--red-light);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .status-offline .status-dot { background: var(--red); }
+
+        .status-loading {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--yellow-light);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        .status-loading .status-dot { background: var(--yellow); animation: pulse 1s infinite; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .clock {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        /* ── CONTAINER ───────────────────────────── */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        /* ── CONTROLS ────────────────────────────── */
+        .controls {
+            display: flex;
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
         .btn {
-            padding: 10px 20px; border-radius: var(--radius-sm); border: none;
-            cursor: pointer; font-weight: 600; font-size: 0.85rem;
-            transition: all 0.3s; display: inline-flex; align-items: center; gap: 6px;
-        }
-        .btn-primary { background: linear-gradient(135deg, var(--green), var(--green2)); color: white; }
-        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(16,185,129,0.4); }
-        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        .btn-secondary { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
-        .btn-secondary:hover { color: var(--text); border-color: var(--text2); }
-
-        /* Session Bar */
-        .session-bar { background: var(--bg3); padding: 10px 16px; border-radius: var(--radius-sm); margin-bottom: 16px; font-size: 0.85rem; color: var(--text2); }
-        .session-bar strong { color: var(--cyan); }
-
-        /* Progress */
-        .progress-container { display: none; margin-bottom: 16px; }
-        .progress-bar-bg { background: var(--bg3); border-radius: 20px; height: 24px; overflow: hidden; position: relative; }
-        .progress-bar-fill {
-            height: 100%; border-radius: 20px; transition: width 0.5s;
-            background: linear-gradient(90deg, var(--cyan), var(--blue), var(--purple));
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.75rem; font-weight: 700; color: white; min-width: 40px;
-        }
-        .progress-info { font-size: 0.8rem; color: var(--text2); margin-top: 6px; text-align: center; }
-
-        /* KPI Grid */
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
-        .kpi-card {
-            background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm);
-            padding: 16px; text-align: center;
-        }
-        .kpi-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); margin-bottom: 4px; }
-        .kpi-value { font-size: 1.5rem; font-weight: 800; font-family: var(--mono); }
-        .kpi-sub { font-size: 0.7rem; color: var(--text3); margin-top: 2px; }
-
-        /* Chart Grid */
-        .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 16px; }
-        .chart-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
-        .chart-card h3 { font-size: 0.9rem; margin-bottom: 10px; color: var(--text2); }
-        .chart-card canvas { width: 100% !important; max-height: 280px; }
-
-        /* Table */
-        .table-container { overflow-x: auto; margin-bottom: 16px; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-        thead th {
-            background: var(--bg3); color: var(--text2); padding: 10px 8px;
-            text-align: center; font-weight: 600; font-size: 0.7rem;
-            text-transform: uppercase; letter-spacing: 0.5px;
-            border-bottom: 2px solid var(--border2); position: sticky; top: 0;
-        }
-        tbody td { padding: 10px 8px; text-align: center; border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 0.78rem; }
-        tbody tr:hover { background: var(--bg3); }
-        .badge { padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; }
-        .badge-green { background: var(--green-bg); color: var(--green); }
-        .badge-yellow { background: var(--yellow-bg); color: var(--yellow); }
-        .badge-red { background: var(--red-bg); color: var(--red); }
-        .badge-blue { background: var(--blue-bg); color: var(--blue); }
-
-        /* Day Trade Cards */
-        .trade-cards-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
-        .trade-legend { display: flex; gap: 12px; flex-wrap: wrap; }
-        .trade-legend-item { display: flex; align-items: center; gap: 4px; font-size: 0.75rem; color: var(--text2); }
-        .trade-legend-color { width: 12px; height: 12px; border-radius: 3px; }
-        .trade-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
-        .trade-card {
-            background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius);
-            padding: 16px; position: relative; overflow: hidden;
-        }
-        .trade-card.tier1 { border-left: 3px solid var(--green); }
-        .trade-card.tier2 { border-left: 3px solid var(--yellow); }
-        .trade-card.tier3 { border-left: 3px solid var(--red); }
-        .trade-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .trade-card-ticker { font-size: 1.1rem; font-weight: 800; font-family: var(--mono); }
-        .trade-card-tier { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
-        .trade-card-prices { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
-        .trade-price-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; }
-        .trade-price-label { color: var(--text3); }
-        .trade-price-value { font-family: var(--mono); font-weight: 600; }
-        .trade-tp { color: var(--green); }
-        .trade-entry { color: var(--cyan); }
-        .trade-sl { color: var(--red); }
-        .trade-exit { color: var(--yellow); }
-        .trade-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
-        .trade-metric { text-align: center; }
-        .trade-metric-label { font-size: 0.6rem; color: var(--text3); text-transform: uppercase; }
-        .trade-metric-value { font-size: 0.8rem; font-weight: 700; font-family: var(--mono); }
-        .trade-visual {
-            height: 60px; position: relative; margin: 10px 0;
-            background: linear-gradient(180deg, rgba(16,185,129,0.05) 0%, transparent 30%, transparent 70%, rgba(239,68,68,0.05) 100%);
-            border-radius: 6px;
-        }
-        .trade-visual-line { position: absolute; left: 0; right: 0; height: 1px; }
-        .trade-visual-line.tp { background: var(--green); top: 10%; }
-        .trade-visual-line.entry { background: var(--cyan); top: 40%; border-style: dashed; }
-        .trade-visual-line.sl { background: var(--red); top: 75%; }
-        .trade-visual-label { position: absolute; right: 4px; font-size: 0.6rem; font-weight: 600; }
-
-        /* Logs */
-        .logs-box {
-            background: #0d1117; border: 1px solid var(--border); border-radius: var(--radius-sm);
-            padding: 12px; max-height: 300px; overflow-y: auto; font-family: var(--mono);
-            font-size: 0.75rem; color: var(--green); line-height: 1.6;
+            padding: 0.65rem 1.4rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            letter-spacing: 0.01em;
         }
 
-        /* Config */
-        .config-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-        .config-group { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; }
-        .config-group h3 { font-size: 0.85rem; margin-bottom: 10px; color: var(--cyan); }
-        .config-field { margin-bottom: 10px; }
-        .config-field label { display: block; font-size: 0.75rem; color: var(--text2); margin-bottom: 4px; }
-        .config-field input, .config-field select {
-            width: 100%; padding: 8px 10px; background: var(--bg); border: 1px solid var(--border);
-            border-radius: 6px; color: var(--text); font-family: var(--mono); font-size: 0.8rem;
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #4f46e5);
+            color: white;
+            box-shadow: 0 4px 15px var(--accent-glow);
         }
-        .config-field input:focus, .config-field select:focus { outline: none; border-color: var(--cyan); }
-        .help-icon { cursor: pointer; color: var(--cyan); font-size: 0.7rem; margin-left: 4px; }
-
-        /* Ticker Management */
-        .ticker-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-        .ticker-tag {
-            background: var(--bg); border: 1px solid var(--border); padding: 4px 10px;
-            border-radius: 20px; font-size: 0.75rem; font-family: var(--mono);
-            display: flex; align-items: center; gap: 4px;
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px var(--accent-glow);
         }
-        .ticker-tag .remove { cursor: pointer; color: var(--red); font-weight: bold; }
-        .ticker-input-row { display: flex; gap: 6px; margin-top: 8px; }
-        .ticker-input-row input { flex: 1; }
-
-        /* Tutorial */
-        .tutorial-section { margin-bottom: 24px; }
-        .tutorial-section h3 { color: var(--cyan); font-size: 1rem; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
-        .tutorial-section p, .tutorial-section li { color: var(--text2); font-size: 0.85rem; line-height: 1.7; }
-        .tutorial-section ul { padding-left: 20px; margin-top: 6px; }
-        .tutorial-section li { margin-bottom: 4px; }
-        .tutorial-box {
-            background: var(--bg3); border-left: 3px solid var(--cyan); padding: 12px 16px;
-            border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin: 10px 0;
-            font-size: 0.83rem; color: var(--text2);
+        .btn-primary:disabled {
+            background: var(--text-dim);
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
         }
-        .tutorial-box.warning { border-left-color: var(--yellow); }
-        .tutorial-box.danger { border-left-color: var(--red); }
-        .tutorial-code { background: #0d1117; padding: 10px 14px; border-radius: 6px; font-family: var(--mono); font-size: 0.78rem; color: var(--green); margin: 8px 0; overflow-x: auto; }
 
-        /* Popup */
-        .popup-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
-        .popup-overlay.active { display: flex; }
-        .popup { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius); padding: 24px; max-width: 500px; width: 90%; }
-        .popup h3 { margin-bottom: 10px; color: var(--cyan); }
-        .popup p { color: var(--text2); font-size: 0.85rem; line-height: 1.6; }
-        .popup .close-btn { margin-top: 14px; }
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+        }
+        .btn-secondary:hover {
+            border-color: var(--border-hover);
+            background: var(--bg-card-hover);
+        }
 
-        /* Health popup */
-        .health-detail { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin-top: 10px; font-family: var(--mono); font-size: 0.78rem; color: var(--text2); white-space: pre-wrap; }
+        .btn-danger {
+            background: linear-gradient(135deg, var(--red), #dc2626);
+            color: white;
+        }
 
-        /* Responsive */
+        .phase-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            flex: 1;
+            text-align: right;
+        }
+
+        /* ── PROGRESS BAR ────────────────────────── */
+        .progress-container {
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.4rem;
+            font-size: 0.78rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--cyan), var(--green));
+            border-radius: 3px;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        /* ── GRID LAYOUTS ────────────────────────── */
+        .grid { display: grid; gap: 1.2rem; }
+        .grid-4 { grid-template-columns: repeat(4, 1fr); }
+        .grid-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-1 { grid-template-columns: 1fr; }
+
+        /* ── CARDS ────────────────────────────────── */
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            border-color: var(--border-hover);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .card-header {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 700;
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .card-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
+
+        .card-sub {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-top: 0.4rem;
+        }
+
+        .green { color: var(--green-light); }
+        .red { color: var(--red-light); }
+        .yellow { color: var(--yellow-light); }
+        .cyan { color: var(--cyan); }
+        .purple { color: var(--purple); }
+        .accent { color: var(--accent-light); }
+
+        /* ── SECTIONS ────────────────────────────── */
+        .section {
+            margin-bottom: 1.8rem;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title .icon { font-size: 1.1rem; }
+
+        /* ── LOG BOX ─────────────────────────────── */
+        .log-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            max-height: 350px;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            line-height: 1.7;
+        }
+
+        .log-box::-webkit-scrollbar { width: 6px; }
+        .log-box::-webkit-scrollbar-track { background: transparent; }
+        .log-box::-webkit-scrollbar-thumb { background: var(--text-dim); border-radius: 3px; }
+
+        .log-line { margin: 0; white-space: pre-wrap; word-break: break-all; }
+
+        /* ── TABLE ────────────────────────────────── */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: var(--radius-sm);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+
+        th {
+            padding: 0.8rem 1rem;
+            text-align: left;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            white-space: nowrap;
+        }
+
+        tr:hover td {
+            background: rgba(99, 102, 241, 0.04);
+        }
+
+        .ticker-cell {
+            font-weight: 700;
+            color: var(--accent-light);
+        }
+
+        /* ── CHARTS ──────────────────────────────── */
+        .chart-container {
+            position: relative;
+            height: 320px;
+        }
+
+        /* ── CAPITAL GRID ────────────────────────── */
+        .capital-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.8rem;
+        }
+
+        .capital-card {
+            background: var(--bg-glass);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .capital-card:hover {
+            border-color: var(--green);
+            box-shadow: 0 0 15px var(--green-glow);
+        }
+
+        .capital-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.3rem;
+        }
+
+        .capital-invested {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+        }
+
+        .capital-projected {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--green-light);
+            margin-top: 0.2rem;
+        }
+
+        .capital-profit {
+            font-size: 0.75rem;
+            color: var(--green);
+            margin-top: 0.2rem;
+        }
+
+        /* ── SUGGESTED CAPITAL ────────────────────── */
+        .suggested-box {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(6, 182, 212, 0.05));
+            border: 1px solid var(--accent);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            text-align: center;
+            margin-top: 1.2rem;
+        }
+
+        .suggested-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--green-light), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ── SCHEDULER INFO ──────────────────────── */
+        .scheduler-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 0.8rem;
+        }
+
+        .schedule-card {
+            background: var(--bg-glass);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+        }
+
+        .schedule-card .job-name {
+            font-weight: 700;
+            color: var(--accent-light);
+            font-size: 0.85rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .schedule-card .job-detail {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .schedule-card .job-next {
+            font-size: 0.8rem;
+            color: var(--green-light);
+            font-family: var(--font-mono);
+            margin-top: 0.3rem;
+        }
+
+        /* ── HIDDEN ──────────────────────────────── */
+        .hidden { display: none !important; }
+
+        /* ── RESPONSIVE ──────────────────────────── */
+        @media (max-width: 1200px) {
+            .grid-4 { grid-template-columns: repeat(2, 1fr); }
+        }
+
         @media (max-width: 768px) {
-            .header h1 { font-size: 1.3rem; }
-            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-            .chart-grid { grid-template-columns: 1fr; }
-            .trade-cards-grid { grid-template-columns: 1fr; }
-            .tabs { gap: 4px; }
-            .tab { padding: 8px 12px; font-size: 0.8rem; }
+            .container { padding: 1rem; }
+            .header { padding: 0.8rem 1rem; flex-wrap: wrap; gap: 0.5rem; }
+            .grid-4 { grid-template-columns: 1fr 1fr; }
+            .grid-3, .grid-2 { grid-template-columns: 1fr; }
+            .card-value { font-size: 1.6rem; }
+            .logo h1 { font-size: 1rem; }
+            .controls { flex-direction: column; align-items: stretch; }
+            .phase-text { text-align: left; }
+        }
+
+        @media (max-width: 480px) {
+            .grid-4 { grid-template-columns: 1fr; }
+            .capital-grid { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
 <body>
 
-<!-- ═══════ HEADER ═══════ -->
-<div class="header">
-    <h1>🌌 <span>HALLEY TRADE IA v3.0</span></h1>
-    <div class="subtitle">Sistema Autônomo de Trading Quantitativo — B3</div>
-    <div class="status-bar">
-        <span class="status-item"><span class="status-dot" id="dotApi"></span> API <span id="lblApi">...</span></span>
-        <span class="status-item"><span class="status-dot" id="dotDb"></span> DB <span id="lblDb">...</span></span>
-        <span class="status-item"><span class="status-dot" id="dotSched"></span> Scheduler <span id="lblSched">...</span></span>
-        <span class="clock" id="clock"></span>
-    </div>
-</div>
-
-<!-- ═══════ TABS ═══════ -->
-<div class="tabs">
-    <div class="tab active" onclick="switchTab('dashboard')">📊 Dashboard</div>
-    <div class="tab" onclick="switchTab('config')">⚙️ Configuração</div>
-    <div class="tab" onclick="switchTab('tutorial')">📖 Tutorial</div>
-</div>
-
-<!-- ═══════ TAB: DASHBOARD ═══════ -->
-<div id="tab-dashboard" class="tab-content active">
-
-    <div class="session-bar">Sessão: <strong id="sessionName">Padrão</strong></div>
-
-    <div class="action-bar">
-        <button class="btn btn-primary" id="btnStart" onclick="startAnalysis()">▶ Iniciar Análise</button>
-        <button class="btn btn-secondary" onclick="loadHistory()">📜 Histórico</button>
-        <button class="btn btn-secondary" onclick="loadScheduler()">🟢 Scheduler</button>
-        <button class="btn btn-secondary" onclick="showHealth()">❤️ Health</button>
-    </div>
-
-    <div class="progress-container" id="progressContainer">
-        <div class="progress-bar-bg">
-            <div class="progress-bar-fill" id="progressFill" style="width:0%">0%</div>
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- HEADER                                                  -->
+<!-- ════════════════════════════════════════════════════════ -->
+<header class="header">
+    <div class="logo">
+        <span class="logo-icon">☄️</span>
+        <div>
+            <h1>HALLEY TRADE IA <span class="version">v3.0</span></h1>
         </div>
-        <div class="progress-info" id="progressInfo">Aguardando...</div>
+    </div>
+    <div class="header-right">
+        <span id="clock" class="clock"></span>
+        <div id="statusBadge" class="status-badge status-loading">
+            <span class="status-dot"></span>
+            Verificando...
+        </div>
+    </div>
+</header>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- MAIN CONTENT                                            -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="container">
+
+    <!-- CONTROLES -->
+    <div class="controls">
+        <button id="btnRun" class="btn btn-primary" onclick="startRun()">
+            <span>▶</span> Iniciar Analise
+        </button>
+        <button class="btn btn-secondary" onclick="loadHistory()">
+            <span>📋</span> Historico
+        </button>
+        <button class="btn btn-secondary" onclick="loadScheduler()">
+            <span>📅</span> Scheduler
+        </button>
+        <button class="btn btn-secondary" onclick="forceDaily()">
+            <span>⚡</span> Forcar Diaria
+        </button>
+        <span id="phaseText" class="phase-text"></span>
+    </div>
+
+    <!-- PROGRESS BAR -->
+    <div id="progressContainer" class="progress-container">
+        <div class="progress-info">
+            <span id="progressPhase" style="color: var(--accent-light);"></span>
+            <span id="progressPct" style="color: var(--text-muted);">0%</span>
+        </div>
+        <div class="progress-bar">
+            <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <!-- SCHEDULER INFO -->
+    <div id="schedulerSection" class="section hidden">
+        <div class="section-title">
+            <span class="icon">📅</span> Automacao — Jobs Agendados
+        </div>
+        <div id="schedulerGrid" class="scheduler-grid"></div>
+    </div>
+
+    <!-- LOGS -->
+    <div id="logSection" class="section hidden">
+        <div class="section-title">
+            <span class="icon">📟</span> Logs em Tempo Real
+        </div>
+        <div id="logBox" class="log-box"></div>
     </div>
 
     <!-- KPIs -->
-    <div class="kpi-grid" id="kpiGrid"></div>
-
-    <!-- Charts -->
-    <div class="chart-grid" id="chartGrid">
-        <div class="chart-card"><h3>📊 Alocação do Portfólio</h3><canvas id="chartAlloc"></canvas></div>
-        <div class="chart-card"><h3>📈 Sharpe por Ativo</h3><canvas id="chartSharpe"></canvas></div>
-        <div class="chart-card"><h3>📉 Max Drawdown por Ativo</h3><canvas id="chartDD"></canvas></div>
-        <div class="chart-card"><h3>🎲 Growth Esperado</h3><canvas id="chartMC"></canvas></div>
-    </div>
-
-    <!-- Asset Table -->
-    <div class="panel">
-        <div class="panel-title">🏆 Ativos Validados</div>
-        <div class="table-container">
-            <table id="assetTable">
-                <thead>
-                    <tr>
-                        <th>#</th><th>Ativo</th><th>Peso</th><th>Valor Alocado</th>
-                        <th>Sharpe</th><th>PF</th><th>WR</th><th>Trades</th>
-                        <th>Avg Trade</th><th>Max DD</th><th>WF</th><th>P(Lucro)</th><th>Growth</th>
-                    </tr>
-                </thead>
-                <tbody id="assetTableBody"></tbody>
-            </table>
+    <div id="kpiSection" class="section hidden">
+        <div class="section-title">
+            <span class="icon">📊</span> Metricas Principais
         </div>
-    </div>
-
-    <!-- Day Trade Cards -->
-    <div class="panel" id="tradeCardsSection" style="display:none;">
-        <div class="trade-cards-header">
-            <div class="panel-title">📋 Operações Day Trade — <span id="tradeDate"></span></div>
-            <div class="trade-legend">
-                <div class="trade-legend-item"><div class="trade-legend-color" style="background:var(--green)"></div> Take Profit</div>
-                <div class="trade-legend-item"><div class="trade-legend-color" style="background:var(--cyan)"></div> Entrada (abertura)</div>
-                <div class="trade-legend-item"><div class="trade-legend-color" style="background:var(--red)"></div> Stop Loss</div>
-                <div class="trade-legend-item"><div class="trade-legend-color" style="background:var(--yellow)"></div> Saída forçada 16:55</div>
+        <div class="grid grid-4">
+            <div class="card">
+                <div class="card-header">☄️ Ativos Validados</div>
+                <div id="kpiValidated" class="card-value green">—</div>
+                <div id="kpiTotal" class="card-sub"></div>
             </div>
-            <div class="trade-legend">
-                <div class="trade-legend-item"><div class="trade-legend-color" style="background:var(--green)"></div> Tier 1</div>
-                <div class="trade-legend-item"><div class="trade-legend-color" style="background:var(--yellow)"></div> Tier 2</div>
-                <div class="trade-legend-item"><div class="trade-legend-color" style="background:var(--red)"></div> Tier 3</div>
+            <div class="card">
+                <div class="card-header">📈 Portfolio Sharpe</div>
+                <div id="kpiSharpe" class="card-value">—</div>
+                <div class="card-sub">Retorno ajustado ao risco</div>
+            </div>
+            <div class="card">
+                <div class="card-header">💰 Retorno Anual Est.</div>
+                <div id="kpiReturn" class="card-value green">—</div>
+                <div class="card-sub">Baseado em Walk-Forward OOS</div>
+            </div>
+            <div class="card">
+                <div class="card-header">☠️ Risco de Ruina</div>
+                <div id="kpiRuin" class="card-value">—</div>
+                <div class="card-sub">Prob. de perder 50% do capital</div>
             </div>
         </div>
-        <div class="trade-cards-grid" id="tradeCardsGrid"></div>
     </div>
 
-    <!-- Logs -->
-    <div class="panel">
-        <div class="panel-title">📝 Logs da Execução</div>
-        <div class="logs-box" id="logsBox">Nenhum log ainda.</div>
-    </div>
-
-    <!-- Scheduler Info -->
-    <div class="panel">
-        <div class="panel-title">🕐 Scheduler</div>
-        <div id="schedulerInfo" style="color:var(--text2); font-size:0.85rem;">Carregue o scheduler...</div>
-    </div>
-
-    <!-- History -->
-    <div class="panel">
-        <div class="panel-title">📜 Histórico de Runs</div>
-        <div id="historyInfo" style="color:var(--text2); font-size:0.85rem;">Carregue o histórico...</div>
-    </div>
-</div>
-
-<!-- ═══════ TAB: CONFIG ═══════ -->
-<div id="tab-config" class="tab-content">
-    <h2 style="margin-bottom:16px;">⚙️ Configuração — HALLEY TRADE IA</h2>
-
-    <!-- Session Manager -->
-    <div class="panel">
-        <div class="panel-title">⚙️ Gerenciamento de Sessões</div>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <input type="text" id="newSessionName" placeholder="Nome da sessão" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.85rem;">
-            <button class="btn btn-secondary" onclick="saveSession()">💾 Salvar</button>
-            <select id="sessionSelect" onchange="loadSession()" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);">
-                <option value="default">Padrão</option>
-            </select>
-            <button class="btn btn-secondary" onclick="deleteSession()">🗑️ Excluir</button>
+    <!-- KPIs EXTRAS -->
+    <div id="kpiExtraSection" class="section hidden">
+        <div class="grid grid-4">
+            <div class="card">
+                <div class="card-header">🎯 Kelly Total</div>
+                <div id="kpiKelly" class="card-value cyan">—</div>
+                <div class="card-sub">Fracao Kelly (50%)</div>
+            </div>
+            <div class="card">
+                <div class="card-header">📊 Trades / Ano</div>
+                <div id="kpiTrades" class="card-value accent">—</div>
+                <div class="card-sub">Total de operacoes estimadas</div>
+            </div>
+            <div class="card">
+                <div class="card-header">⏱️ Duracao</div>
+                <div id="kpiDuration" class="card-value">—</div>
+                <div class="card-sub">Tempo de processamento</div>
+            </div>
+            <div class="card">
+                <div class="card-header">🔧 Custos Modelados</div>
+                <div id="kpiCosts" class="card-value yellow">0.325%</div>
+                <div class="card-sub">Round-trip (emolumentos+corretagem+slippage)</div>
+            </div>
         </div>
     </div>
 
-    <!-- Capital -->
-    <div class="panel">
-        <div class="panel-title">💰 Capital Operado</div>
-        <div class="config-field">
-            <label>Valor do Capital (R$) <span class="help-icon" onclick="showHelp('capital','Capital total disponível para operações. O sistema usa Kelly Criterion para calcular quanto alocar.')">?</span></label>
-            <input type="number" id="cfg_capital" value="10000" min="100" step="100" onchange="saveCurrentConfig()">
+    <!-- CHARTS -->
+    <div id="chartSection" class="section hidden">
+        <div class="grid grid-2">
+            <div class="card">
+                <div class="card-header">🥧 Alocacao do Portfolio (Markowitz)</div>
+                <div class="chart-container">
+                    <canvas id="chartAllocation"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">🎲 Monte Carlo — Prob. de Lucro por Ativo</div>
+                <div class="chart-container">
+                    <canvas id="chartMonteCarlo"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Tickers -->
-    <div class="panel">
-        <div class="panel-title">📋 Ativos (Tickers B3)</div>
-        <div class="ticker-list" id="tickerList"></div>
-        <div class="ticker-input-row">
-            <input type="text" id="newTicker" placeholder="Ex: BBAS3.SA" style="padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);">
-            <button class="btn btn-secondary" onclick="addTicker()">+ Adicionar</button>
+    <!-- CHART EXTRA: SHARPE POR ATIVO -->
+    <div id="chartExtraSection" class="section hidden">
+        <div class="grid grid-2">
+            <div class="card">
+                <div class="card-header">📈 Sharpe OOS por Ativo</div>
+                <div class="chart-container">
+                    <canvas id="chartSharpe"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">📉 Max Drawdown por Ativo</div>
+                <div class="chart-container">
+                    <canvas id="chartDrawdown"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Config Groups -->
-    <div class="config-grid" id="configGrid"></div>
-</div>
+    <!-- TABELA DE ATIVOS -->
+    <div id="assetsSection" class="section hidden">
+        <div class="section-title">
+            <span class="icon">🏆</span> Ativos Validados — Walk-Forward + Monte Carlo
+        </div>
+        <div class="card">
+            <div class="table-wrapper">
+                <table id="assetsTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Ativo</th>
+                            <th>Peso</th>
+                            <th>Sharpe OOS</th>
+                            <th>Profit Factor</th>
+                            <th>Win Rate</th>
+                            <th>Trades</th>
+                            <th>Avg Trade</th>
+                            <th>Max DD</th>
+                            <th>WF Score</th>
+                            <th>P(Lucro)</th>
+                            <th>P(2x)</th>
+                            <th>Growth</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-<!-- ═══════ TAB: TUTORIAL ═══════ -->
-<div id="tab-tutorial" class="tab-content">
-    <h2 style="margin-bottom:16px;">📖 Como Operar com os Sinais</h2>
-    <div style="color:var(--text2);font-size:0.85rem;margin-bottom:16px;">Guia rápido para leitura dos dados e execução de ordens Day Trade.</div>
-    <div id="tutorialContent"></div>
-</div>
+    <!-- CAPITAL -->
+    <div id="capitalSection" class="section hidden">
+        <div class="section-title">
+            <span class="icon">💰</span> Projecao de Capital (1 Ano)
+        </div>
+        <div id="capitalGrid" class="capital-grid"></div>
+        <div class="suggested-box">
+            <div class="card-header" style="justify-content: center;">☄️ Capital Sugerido — HALLEY TRADE IA</div>
+            <div id="suggestedCapital" class="suggested-value">—</div>
+            <div class="card-sub" style="margin-top: 0.5rem;">
+                Baseado em Kelly Criterion fracional (50%) + risco de ruina + custos B3
+            </div>
+        </div>
+    </div>
 
-<!-- ═══════ POPUP ═══════ -->
-<div class="popup-overlay" id="popupOverlay" onclick="if(event.target===this)closePopup()">
-    <div class="popup">
-        <h3 id="popupTitle"></h3>
-        <p id="popupText"></p>
-        <div id="popupExtra"></div>
-        <button class="btn btn-secondary close-btn" onclick="closePopup()">Fechar</button>
+    <!-- FOOTER -->
+    <div style="text-align: center; padding: 2rem 0; color: var(--text-dim); font-size: 0.75rem;">
+        ☄️ HALLEY TRADE IA v3.0 — Sistema Quantitativo Autonomo com Machine Learning<br>
+        XGBoost + LightGBM + Random Forest + HMM + Meta-Labeling + Walk-Forward + Monte Carlo + Markowitz + Kelly
     </div>
 </div>
 
-<!-- ═══════ JAVASCRIPT ═══════ -->
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- JAVASCRIPT COMPLETO                                     -->
+<!-- ════════════════════════════════════════════════════════ -->
 <script>
-// ══════════════════════════════════════
-// CONSTANTS
-// ══════════════════════════════════════
+// ============================================================
+// CONFIGURACAO — ALTERE A URL ABAIXO PARA SEU HF SPACE
+// ============================================================
 const API_BASE = 'https://wanderhalleylee-halley-trade-ia.hf.space';
+// ============================================================
 
-const DEFAULT_TICKERS = [
-    "PETR4.SA","VALE3.SA","ITUB4.SA","BBDC4.SA","ABEV3.SA",
-    "RENT3.SA","EQTL3.SA","BBAS3.SA","VIVT3.SA","RADL3.SA",
-    "GGBR4.SA","LREN3.SA","TOTS3.SA","WEGE3.SA","SUZB3.SA",
-    "JBSS3.SA","MGLU3.SA","HAPV3.SA","RAIL3.SA","ENEV3.SA"
-];
-
-const DEFAULT_CONFIG = {
-    start_date: "2018-01-01",
-    min_years: 3,
-    min_data_points: 756,
-    wf_splits: 4,
-    wf_train_ratio: 0.75,
-    wf_min_pass: 2,
-    wf_min_trades_per_window: 5,
-    signal_threshold: 0.50,
-    meta_threshold: 0.45,
-    mc_simulations: 2000,
-    mc_risk_free: 0.1175,
-    kelly_fraction: 0.5,
-    cost_round_trip: 0.00325,
-    max_drawdown_limit: 0.70,
-    ruin_simulations: 3000,
-    ruin_threshold: 0.25,
-    retrain_enabled: true,
-    retrain_day: "sunday",
-    retrain_hour: 3,
-    retrain_mc_simulations: 3000,
-    retrain_wf_splits: 5
-};
-
-const CFG_GROUPS = [
-    {
-        title: "📅 Dados", fields: [
-            {id:"start_date", label:"Data Início", type:"text", help:"Data inicial para download de dados históricos (YYYY-MM-DD)."},
-            {id:"min_years", label:"Mínimo de Anos", type:"number", help:"Mínimo de anos de dados necessários."},
-            {id:"min_data_points", label:"Mín. Data Points", type:"number", help:"Mínimo de registros diários necessários."}
-        ]
-    },
-    {
-        title: "🔄 Walk-Forward", fields: [
-            {id:"wf_splits", label:"Nº Janelas", type:"number", help:"Número de splits para walk-forward (4=flexível, 5+=rigoroso)."},
-            {id:"wf_train_ratio", label:"Ratio Treino", type:"number", help:"Proporção dos dados usada para treino (0.70 a 0.80)."},
-            {id:"wf_min_pass", label:"Mín. Janelas OK", type:"number", help:"Mínimo de janelas que precisam ser lucrativas (2=flexível, 3+=rigoroso)."},
-            {id:"wf_min_trades_per_window", label:"Mín. Trades/Janela", type:"number", help:"Trades mínimos por janela para ser válida."}
-        ]
-    },
-    {
-        title: "🎯 Sinais", fields: [
-            {id:"signal_threshold", label:"Threshold Sinal", type:"number", help:"Probabilidade mínima do ensemble para gerar sinal (0.50=flexível)."},
-            {id:"meta_threshold", label:"Threshold Meta", type:"number", help:"Confiança mínima do meta-labeler (0.45=flexível)."}
-        ]
-    },
-    {
-        title: "🎲 Monte Carlo", fields: [
-            {id:"mc_simulations", label:"Simulações MC", type:"number", help:"Número de simulações Monte Carlo."},
-            {id:"mc_risk_free", label:"Taxa Livre Risco", type:"number", help:"Taxa SELIC anual para cálculo do Sharpe."}
-        ]
-    },
-    {
-        title: "💰 Kelly & Risco", fields: [
-            {id:"kelly_fraction", label:"Fração Kelly", type:"number", help:"Fração do Kelly Criterion a usar (0.5 = Half Kelly)."},
-            {id:"cost_round_trip", label:"Custo Round-Trip", type:"number", help:"Custo total de entrada+saída (corretagem+emolumentos)."},
-            {id:"max_drawdown_limit", label:"Max DD Limite", type:"number", help:"Drawdown máximo aceitável."},
-            {id:"ruin_simulations", label:"Simulações Ruína", type:"number", help:"Simulações para calcular risco de ruína."},
-            {id:"ruin_threshold", label:"Threshold Ruína", type:"number", help:"Nível de equity que define ruína (0.25 = perder 75%)."}
-        ]
-    },
-    {
-        title: "🔁 Retrain Semanal", fields: [
-            {id:"retrain_day", label:"Dia Retrain", type:"text", help:"Dia da semana para retrain (sunday, monday, etc.)."},
-            {id:"retrain_hour", label:"Hora Retrain", type:"number", help:"Hora (0-23) para retrain."},
-            {id:"retrain_mc_simulations", label:"MC Retrain", type:"number", help:"Simulações MC no retrain."},
-            {id:"retrain_wf_splits", label:"WF Splits Retrain", type:"number", help:"Janelas WF no retrain (pode ser mais rigoroso)."}
-        ]
-    }
-];
-
-const ASSET_INFO = {
-    "PETR4.SA": {name:"Petrobras PN", price:46.78, atr:1.40},
-    "VALE3.SA": {name:"Vale ON", price:76.63, atr:2.30},
-    "ITUB4.SA": {name:"Itaú PN", price:33.50, atr:0.85},
-    "BBDC4.SA": {name:"Bradesco PN", price:14.20, atr:0.45},
-    "ABEV3.SA": {name:"Ambev ON", price:13.80, atr:0.35},
-    "RENT3.SA": {name:"Localiza ON", price:42.50, atr:1.50},
-    "EQTL3.SA": {name:"Equatorial ON", price:30.20, atr:0.80},
-    "BBAS3.SA": {name:"BB ON", price:27.50, atr:0.75},
-    "VIVT3.SA": {name:"Vivo ON", price:52.30, atr:1.10},
-    "RADL3.SA": {name:"Raia Drogasil ON", price:25.80, atr:0.65},
-    "GGBR4.SA": {name:"Gerdau PN", price:17.49, atr:0.55},
-    "LREN3.SA": {name:"Lojas Renner ON", price:16.90, atr:0.55},
-    "TOTS3.SA": {name:"Totvs ON", price:28.50, atr:0.80},
-    "WEGE3.SA": {name:"WEG ON", price:52.00, atr:1.40},
-    "SUZB3.SA": {name:"Suzano ON", price:55.00, atr:1.60},
-    "JBSS3.SA": {name:"JBS ON", price:38.50, atr:1.10},
-    "MGLU3.SA": {name:"Magazine Luiza ON", price:8.50, atr:0.40},
-    "HAPV3.SA": {name:"Hapvida ON", price:3.80, atr:0.15},
-    "RAIL3.SA": {name:"Rumo ON", price:21.00, atr:0.60},
-    "ENEV3.SA": {name:"Eneva ON", price:13.50, atr:0.40}
-};
-
-// ══════════════════════════════════════
-// STATE
-// ══════════════════════════════════════
-let currentConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-let currentTickers = [...DEFAULT_TICKERS];
 let currentRunId = null;
 let pollInterval = null;
-let chartInstances = {};
+let charts = {};
 
-// BUGFIX #11 — função formatBRL() não existia
-function formatBRL(value) {
-    if (value == null || isNaN(value)) return 'R$ 0,00';
-    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
-
-// ══════════════════════════════════════
-// INIT
-// ══════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
-    loadFromStorage();
-    renderTickers();
-    renderConfigGrid();
-    renderTutorial();
-    updateClock();
-    setInterval(updateClock, 1000);
-    checkHealth();
-    setInterval(checkHealth, 60000);
-});
-
-function loadFromStorage() {
-    try {
-        const saved = localStorage.getItem('halley_config');
-        if (saved) {
-            const parsed = JSON.parse(saved);
-            currentConfig = {...DEFAULT_CONFIG, ...parsed.config};
-            currentTickers = parsed.tickers || [...DEFAULT_TICKERS];
-            document.getElementById('cfg_capital').value = parsed.capital || 10000;
-        }
-    } catch(e) { console.warn('Config load error:', e); }
-    try {
-        const sessions = JSON.parse(localStorage.getItem('halley_sessions') || '{}');
-        const sel = document.getElementById('sessionSelect');
-        sel.innerHTML = '<option value="default">Padrão</option>';
-        for (const name of Object.keys(sessions)) {
-            sel.innerHTML += `<option value="${name}">${name}</option>`;
-        }
-    } catch(e) {}
-}
-
-function saveCurrentConfig() {
-    try {
-        for (const group of CFG_GROUPS) {
-            for (const field of group.fields) {
-                const el = document.getElementById('cfg_' + field.id);
-                if (el) {
-                    let val = el.value;
-                    if (field.type === 'number') val = parseFloat(val);
-                    currentConfig[field.id] = val;
-                }
-            }
-        }
-        localStorage.setItem('halley_config', JSON.stringify({
-            config: currentConfig,
-            tickers: currentTickers,
-            capital: parseFloat(document.getElementById('cfg_capital').value) || 10000
-        }));
-    } catch(e) { console.warn('Config save error:', e); }
-}
-
-// ══════════════════════════════════════
-// SESSIONS
-// ══════════════════════════════════════
-function saveSession() {
-    const name = document.getElementById('newSessionName').value.trim();
-    if (!name) return alert('Digite um nome');
-    saveCurrentConfig();
-    const sessions = JSON.parse(localStorage.getItem('halley_sessions') || '{}');
-    sessions[name] = {
-        config: currentConfig,
-        tickers: currentTickers,
-        capital: parseFloat(document.getElementById('cfg_capital').value) || 10000
-    };
-    localStorage.setItem('halley_sessions', JSON.stringify(sessions));
-    loadFromStorage();
-    document.getElementById('sessionSelect').value = name;
-    document.getElementById('sessionName').textContent = name;
-}
-
-function loadSession() {
-    const name = document.getElementById('sessionSelect').value;
-    if (name === 'default') {
-        currentConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-        currentTickers = [...DEFAULT_TICKERS];
-        document.getElementById('cfg_capital').value = 10000;
-    } else {
-        const sessions = JSON.parse(localStorage.getItem('halley_sessions') || '{}');
-        if (sessions[name]) {
-            currentConfig = {...DEFAULT_CONFIG, ...sessions[name].config};
-            currentTickers = sessions[name].tickers || [...DEFAULT_TICKERS];
-            document.getElementById('cfg_capital').value = sessions[name].capital || 10000;
-        }
-    }
-    document.getElementById('sessionName').textContent = name === 'default' ? 'Padrão' : name;
-    renderTickers();
-    renderConfigGrid();
-    saveCurrentConfig();
-}
-
-function deleteSession() {
-    const name = document.getElementById('sessionSelect').value;
-    if (name === 'default') return;
-    const sessions = JSON.parse(localStorage.getItem('halley_sessions') || '{}');
-    delete sessions[name];
-    localStorage.setItem('halley_sessions', JSON.stringify(sessions));
-    loadFromStorage();
-    document.getElementById('sessionSelect').value = 'default';
-    loadSession();
-}
-
-// ══════════════════════════════════════
-// TICKERS
-// ══════════════════════════════════════
-function renderTickers() {
-    const list = document.getElementById('tickerList');
-    list.innerHTML = currentTickers.map(t =>
-        `<span class="ticker-tag">${t} <span class="remove" onclick="removeTicker('${t}')">×</span></span>`
-    ).join('');
-}
-
-function addTicker() {
-    let t = document.getElementById('newTicker').value.trim().toUpperCase();
-    if (!t) return;
-    if (!t.endsWith('.SA')) t += '.SA';
-    if (!currentTickers.includes(t)) {
-        currentTickers.push(t);
-        renderTickers();
-        saveCurrentConfig();
-    }
-    document.getElementById('newTicker').value = '';
-}
-
-function removeTicker(t) {
-    currentTickers = currentTickers.filter(x => x !== t);
-    renderTickers();
-    saveCurrentConfig();
-}
-
-// ══════════════════════════════════════
-// CONFIG GRID
-// ══════════════════════════════════════
-function renderConfigGrid() {
-    const grid = document.getElementById('configGrid');
-    grid.innerHTML = CFG_GROUPS.map(group => {
-        const fields = group.fields.map(f => {
-            const val = currentConfig[f.id] !== undefined ? currentConfig[f.id] : '';
-            return `<div class="config-field">
-                <label>${f.label} <span class="help-icon" onclick="showHelp('${f.id}','${f.help}')">?</span></label>
-                <input type="${f.type}" id="cfg_${f.id}" value="${val}" onchange="saveCurrentConfig()">
-            </div>`;
-        }).join('');
-        return `<div class="config-group"><h3>${group.title}</h3>${fields}</div>`;
-    }).join('');
-}
-
-// ══════════════════════════════════════
-// POPUP
-// ══════════════════════════════════════
-function showHelp(id, text) {
-    document.getElementById('popupTitle').textContent = id;
-    document.getElementById('popupText').textContent = text;
-    document.getElementById('popupExtra').innerHTML = '';
-    document.getElementById('popupOverlay').classList.add('active');
-}
-
-function closePopup() {
-    document.getElementById('popupOverlay').classList.remove('active');
-}
-
-// ══════════════════════════════════════
-// TABS
-// ══════════════════════════════════════
-function switchTab(tab) {
-    document.querySelectorAll('.tab').forEach((el, i) => {
-        const names = ['dashboard', 'config', 'tutorial'];
-        el.classList.toggle('active', names[i] === tab);
-    });
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    document.getElementById('tab-' + tab).classList.add('active');
-}
-
-// ══════════════════════════════════════
-// CLOCK
-// ══════════════════════════════════════
+// ── CLOCK ────────────────────────────────────
 function updateClock() {
     const now = new Date();
-    document.getElementById('clock').textContent = now.toLocaleString('pt-BR', {
-        timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit'
-    }) + ' BRT';
+    const br = now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const day = now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'short', day: '2-digit', month: 'short' });
+    document.getElementById('clock').textContent = `${day} ${br}`;
 }
+setInterval(updateClock, 1000);
+updateClock();
 
-// ══════════════════════════════════════
-// HEALTH CHECK
-// ══════════════════════════════════════
-// BUGFIX #1 — era data.status === 'alive' && data.db_connected; agora usa data.status === 'healthy' && data.database?.connected
+// ── HEALTH CHECK ─────────────────────────────
 async function checkHealth() {
+    const badge = document.getElementById('statusBadge');
     try {
-        const resp = await fetch(API_BASE + '/health', { signal: AbortSignal.timeout(10000) });
-        const data = await resp.json();
-
-        // BUGFIX #1 — API status
-        const apiOk = data.status === 'healthy';
-        document.getElementById('dotApi').className = 'status-dot ' + (apiOk ? 'green' : 'red');
-        document.getElementById('lblApi').textContent = apiOk ? 'Online' : 'Erro';
-
-        // BUGFIX #1 — DB status via data.database.connected
-        const dbOk = data.database && data.database.connected === true;
-        document.getElementById('dotDb').className = 'status-dot ' + (dbOk ? 'green' : 'red');
-        document.getElementById('lblDb').textContent = dbOk ? 'OK' : (data.database?.error || 'Erro');
-
-        // BUGFIX #1 — Scheduler via data.scheduler.running
-        const schedOk = data.scheduler && data.scheduler.running === true;
-        document.getElementById('dotSched').className = 'status-dot ' + (schedOk ? 'green' : 'red');
-        document.getElementById('lblSched').textContent = schedOk ? 'ON' : 'OFF';
-
-        window._lastHealth = data;
-    } catch(e) {
-        document.getElementById('dotApi').className = 'status-dot red';
-        document.getElementById('lblApi').textContent = 'Offline';
-        document.getElementById('dotDb').className = 'status-dot red';
-        document.getElementById('lblDb').textContent = '?';
-        document.getElementById('dotSched').className = 'status-dot red';
-        document.getElementById('lblSched').textContent = '?';
-        window._lastHealth = null;
+        const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(15000) });
+        const data = await res.json();
+        if (data.status === 'alive' && data.db_connected) {
+            badge.innerHTML = '<span class="status-dot"></span> Online · DB OK';
+            badge.className = 'status-badge status-online';
+        } else if (data.status === 'alive') {
+            badge.innerHTML = '<span class="status-dot"></span> Online · DB Erro';
+            badge.className = 'status-badge status-loading';
+        } else {
+            badge.innerHTML = '<span class="status-dot"></span> Erro';
+            badge.className = 'status-badge status-offline';
+        }
+    } catch (e) {
+        badge.innerHTML = '<span class="status-dot"></span> Offline';
+        badge.className = 'status-badge status-offline';
     }
 }
+checkHealth();
+setInterval(checkHealth, 60000);
 
-async function showHealth() {
-    await checkHealth();
-    const data = window._lastHealth;
-    document.getElementById('popupTitle').textContent = '❤️ Health Check';
-    if (!data) {
-        document.getElementById('popupText').textContent = 'Não foi possível conectar ao backend.';
-        document.getElementById('popupExtra').innerHTML = '';
-    } else {
-        document.getElementById('popupText').textContent = `Status: ${data.status} | Versão: ${data.version}`;
-        document.getElementById('popupExtra').innerHTML = `<div class="health-detail">${JSON.stringify(data, null, 2)}</div>`;
-    }
-    document.getElementById('popupOverlay').classList.add('active');
-}
-
-// ══════════════════════════════════════
-// START ANALYSIS
-// ══════════════════════════════════════
-async function startAnalysis() {
-    const btn = document.getElementById('btnStart');
+// ── START RUN ────────────────────────────────
+async function startRun() {
+    const btn = document.getElementById('btnRun');
     btn.disabled = true;
-    btn.textContent = '⏳ Iniciando...';
+    btn.innerHTML = '<span>⏳</span> Processando...';
 
-    saveCurrentConfig();
-
-    const body = { tickers: currentTickers, config_override: currentConfig };
+    show('logSection');
+    show('progressContainer', 'block');
+    document.getElementById('logBox').innerHTML = '';
+    document.getElementById('progressFill').style.width = '0%';
 
     try {
-        const resp = await fetch(API_BASE + '/run', {
+        const res = await fetch(`${API_BASE}/run`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
+            body: JSON.stringify({})
         });
-        if (resp.status === 409) {
-            const err = await resp.json();
-            addLog('⚠️ Já existe uma análise em execução: ' + (err.detail || '409'));
-            btn.disabled = false;
-            btn.textContent = '▶ Iniciar Análise';
-            return;
-        }
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const data = await resp.json();
+        const data = await res.json();
         currentRunId = data.run_id;
-        addLog('🚀 Análise iniciada: ' + currentRunId);
-        document.getElementById('progressContainer').style.display = 'block';
-        startPolling();
-    } catch(e) {
-        addLog('❌ Erro ao iniciar: ' + e.message);
+        pollInterval = setInterval(pollStatus, 2500);
+    } catch (e) {
+        alert('Erro ao conectar com o backend: ' + e.message);
         btn.disabled = false;
-        btn.textContent = '▶ Iniciar Análise';
+        btn.innerHTML = '<span>▶</span> Iniciar Analise';
     }
 }
 
-// ══════════════════════════════════════
-// POLLING
-// ══════════════════════════════════════
-function startPolling() {
-    if (pollInterval) clearInterval(pollInterval);
-    pollInterval = setInterval(pollStatus, 3000);
-    pollStatus();
+// ── FORCE DAILY ──────────────────────────────
+async function forceDaily() {
+    if (!confirm('Forcar analise diaria agora?')) return;
+    try {
+        const res = await fetch(`${API_BASE}/force-daily`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        });
+        const data = await res.json();
+        currentRunId = data.run_id;
+        show('logSection');
+        show('progressContainer', 'block');
+        document.getElementById('logBox').innerHTML = '';
+        document.getElementById('btnRun').disabled = true;
+        document.getElementById('btnRun').innerHTML = '<span>⏳</span> Processando...';
+        pollInterval = setInterval(pollStatus, 2500);
+    } catch (e) {
+        alert('Erro: ' + e.message);
+    }
 }
 
-// BUGFIX #2 — era data.phase (não existe); agora usa data.current_ticker + data.validated + data.failed
+// ── POLL STATUS ──────────────────────────────
 async function pollStatus() {
     if (!currentRunId) return;
     try {
-        const resp = await fetch(API_BASE + '/status/' + currentRunId);
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const data = await resp.json();
+        const res = await fetch(`${API_BASE}/status/${currentRunId}`);
+        const data = await res.json();
 
+        // Progress
         const pct = data.progress || 0;
-        document.getElementById('progressFill').style.width = pct + '%';
-        document.getElementById('progressFill').textContent = pct + '%';
-        // BUGFIX #2 — montar texto com current_ticker + validated + failed
-        const phase = data.current_ticker || '...';
-        document.getElementById('progressInfo').textContent =
-            `${phase} — ✅ ${data.validated || 0} validados | ❌ ${data.failed || 0} falhos | ${pct}%`;
+        document.getElementById('progressFill').style.width = `${pct}%`;
+        document.getElementById('progressPct').textContent = `${pct}%`;
+        document.getElementById('progressPhase').textContent = data.phase || '';
+        document.getElementById('phaseText').textContent = data.phase || '';
 
-        if (data.logs && Array.isArray(data.logs)) {
-            const logsBox = document.getElementById('logsBox');
-            logsBox.innerHTML = data.logs.map(l => `<div>${l}</div>`).join('');
-            logsBox.scrollTop = logsBox.scrollHeight;
-        }
+        // Logs
+        const logBox = document.getElementById('logBox');
+        logBox.innerHTML = (data.logs || []).map(l => `<p class="log-line">${escapeHtml(l)}</p>`).join('');
+        logBox.scrollTop = logBox.scrollHeight;
 
+        // Finished?
         if (data.status === 'completed' || data.status === 'failed') {
             clearInterval(pollInterval);
-            pollInterval = null;
-            document.getElementById('btnStart').disabled = false;
-            document.getElementById('btnStart').textContent = '▶ Iniciar Análise';
+            const btn = document.getElementById('btnRun');
+            btn.disabled = false;
+            btn.innerHTML = '<span>▶</span> Iniciar Analise';
+
             if (data.status === 'completed') {
-                addLog('✅ Análise concluída!');
                 loadResults(currentRunId);
-            } else {
-                addLog('❌ Análise falhou.');
             }
         }
-    } catch(e) {
-        addLog('⚠️ Erro no polling: ' + e.message);
+    } catch (e) {
+        console.error('Poll error:', e);
     }
 }
 
-// ══════════════════════════════════════
-// LOAD RESULTS
-// ══════════════════════════════════════
+// ── LOAD RESULTS ─────────────────────────────
 async function loadResults(runId) {
     try {
-        const resp = await fetch(API_BASE + '/results/' + runId);
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const data = await resp.json();
-        // BUGFIX #12 — renderAll passa portfolio para renderTable
-        renderAll(data);
-    } catch(e) {
-        addLog('⚠️ Erro ao carregar resultados: ' + e.message);
+        const res = await fetch(`${API_BASE}/results/${runId}`);
+        const data = await res.json();
+        if (data.assets && Object.keys(data.assets).length > 0) {
+            renderAll(data);
+        } else if (data.message) {
+            document.getElementById('phaseText').textContent = data.message;
+        }
+    } catch (e) {
+        console.error('Results error:', e);
     }
 }
 
-// ══════════════════════════════════════
-// RENDER ALL
-// ══════════════════════════════════════
+// ── LOAD HISTORY ─────────────────────────────
+async function loadHistory() {
+    try {
+        const res = await fetch(`${API_BASE}/history`);
+        const data = await res.json();
+        if (data.runs && data.runs.length > 0) {
+            // Buscar resultado da ultima rodada completa
+            for (const run of data.runs) {
+                if (run.status === 'completed' && run.id) {
+                    try {
+                        const rres = await fetch(`${API_BASE}/results/${run.id}`);
+                        const rdata = await rres.json();
+                        if (rdata.assets && Object.keys(rdata.assets).length > 0) {
+                            renderAll(rdata);
+                            return;
+                        }
+                    } catch (e) { continue; }
+                }
+            }
+            alert('Nenhuma rodada com resultados encontrada.');
+        } else {
+            alert('Nenhuma rodada no historico.');
+        }
+    } catch (e) {
+        alert('Erro: ' + e.message);
+    }
+}
+
+// ── LOAD SCHEDULER ───────────────────────────
+async function loadScheduler() {
+    try {
+        const res = await fetch(`${API_BASE}/scheduler`);
+        const data = await res.json();
+        const grid = document.getElementById('schedulerGrid');
+
+        const scheduleInfo = data.schedule || {};
+        const jobs = data.jobs || [];
+
+        let html = '';
+        for (const job of jobs) {
+            const info = scheduleInfo[job.id] || job.trigger;
+            html += `
+                <div class="schedule-card">
+                    <div class="job-name">${job.id.replace('halley_', '').replace(/_/g, ' ').toUpperCase()}</div>
+                    <div class="job-detail">${info}</div>
+                    <div class="job-next">Proxima: ${job.next_run || '—'}</div>
+                </div>
+            `;
+        }
+
+        if (!jobs.length) {
+            html = '<div class="schedule-card"><div class="job-name">Nenhum job encontrado</div></div>';
+        }
+
+        html += `
+            <div class="schedule-card">
+                <div class="job-name">STATUS</div>
+                <div class="job-detail">Scheduler: ${data.scheduler_running ? '✅ Ativo' : '❌ Inativo'}</div>
+                <div class="job-next">Timezone: ${data.timezone || 'N/A'}</div>
+            </div>
+        `;
+
+        grid.innerHTML = html;
+        show('schedulerSection');
+    } catch (e) {
+        alert('Erro ao carregar scheduler: ' + e.message);
+    }
+}
+
+// ── RENDER ALL ───────────────────────────────
 function renderAll(data) {
     renderKPIs(data);
     renderCharts(data);
-    // BUGFIX #12 — passar data.portfolio como segundo parâmetro
-    renderTable(data, data.portfolio);
+    renderTable(data);
     renderCapital(data);
-    renderTradeCards(data);
 }
 
-// ══════════════════════════════════════
-// RENDER KPIs
-// ══════════════════════════════════════
-// BUGFIX #3 — todos os caminhos de campo corrigidos para formato real do backend
+// ── RENDER KPIs ──────────────────────────────
 function renderKPIs(data) {
-    const capital = parseFloat(document.getElementById('cfg_capital').value) || 10000;
-    const portfolio = data.portfolio || {};
+    show('kpiSection');
+    show('kpiExtraSection');
 
-    // BUGFIX #3 — validated_count (era validated_assets)
-    const validatedCount = data.validated_count || 0;
-    // BUGFIX #3 — total_tickers (era total_assets)
-    const totalTickers = data.total_tickers || 0;
-    // BUGFIX #3 — portfolio.annual_return_estimate (era data.annual_return_est)
-    const annualReturn = portfolio.annual_return_estimate || 0;
-    // BUGFIX #3 — portfolio.risk_of_ruin (era data.risk?.risk_of_ruin)
-    const riskOfRuin = portfolio.risk_of_ruin || 0;
-    // BUGFIX #3 — portfolio.total_kelly (era portfolio.kelly_total)
-    const kellyTotal = portfolio.total_kelly || 0;
-    // BUGFIX #3 — portfolio.total_trades_per_year (era data.trades_per_year)
-    const tradesPerYear = portfolio.total_trades_per_year || 0;
-    // BUGFIX #3 — data.config?.cost_round_trip (era data.config_used?.cost_round_trip)
-    const costRT = data.config?.cost_round_trip || 0.00325;
+    document.getElementById('kpiValidated').textContent = data.validated_assets || 0;
+    document.getElementById('kpiTotal').textContent = `de ${data.total_assets || 0} analisados`;
 
-    const capitalAlocado = capital * kellyTotal;
-    const retornoAnualR = capitalAlocado * annualReturn;
-    const retornoMensalR = retornoAnualR / 12;
-    const portfolioSharpe = portfolio.portfolio_sharpe || 0;
+    const sharpe = data.portfolio?.portfolio_sharpe || 0;
+    const el = document.getElementById('kpiSharpe');
+    el.textContent = sharpe.toFixed(3);
+    el.className = `card-value ${sharpe > 0.5 ? 'green' : sharpe > 0 ? 'yellow' : 'red'}`;
 
-    const kpiGrid = document.getElementById('kpiGrid');
-    kpiGrid.innerHTML = `
-        <div class="kpi-card">
-            <div class="kpi-label">Ativos Validados</div>
-            <div class="kpi-value" style="color:var(--green)">${validatedCount}</div>
-            <div class="kpi-sub">de ${totalTickers} analisados</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-label">Retorno Anual Est.</div>
-            <div class="kpi-value" style="color:${annualReturn >= 0 ? 'var(--green)' : 'var(--red)'}">${(annualReturn * 100).toFixed(2)}%</div>
-            <div class="kpi-sub">${formatBRL(retornoAnualR)}/ano</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-label">Risco de Ruína</div>
-            <div class="kpi-value" style="color:${riskOfRuin < 0.05 ? 'var(--green)' : 'var(--red)'}">${(riskOfRuin * 100).toFixed(2)}%</div>
-            <div class="kpi-sub">limiar de ruína</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-label">Kelly Total</div>
-            <div class="kpi-value" style="color:var(--cyan)">${(kellyTotal * 100).toFixed(1)}%</div>
-            <div class="kpi-sub">${formatBRL(capitalAlocado)} alocado</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-label">Trades/Ano</div>
-            <div class="kpi-value" style="color:var(--purple)">${tradesPerYear.toLocaleString('pt-BR')}</div>
-            <div class="kpi-sub">Custo: ${formatBRL(tradesPerYear * costRT * capitalAlocado)}</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-label">Sharpe Portfólio</div>
-            <div class="kpi-value" style="color:var(--yellow)">${portfolioSharpe.toFixed(2)}</div>
-            <div class="kpi-sub">Out-of-sample</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-label">Retorno Mensal Est.</div>
-            <div class="kpi-value" style="color:var(--green)">${formatBRL(retornoMensalR)}</div>
-            <div class="kpi-sub">sobre ${formatBRL(capital)}</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-label">Capital Sugerido</div>
-            <div class="kpi-value" style="color:var(--cyan)">${kellyTotal > 0 ? formatBRL(50000 / kellyTotal) : '—'}</div>
-            <div class="kpi-sub">para R$50k exposição</div>
-        </div>
-    `;
+    const ret = data.annual_return_est || 0;
+    const retEl = document.getElementById('kpiReturn');
+    retEl.textContent = `${(ret * 100).toFixed(1)}%`;
+    retEl.className = `card-value ${ret > 0 ? 'green' : 'red'}`;
+
+    const ruin = data.risk?.risk_of_ruin || 0;
+    const ruinEl = document.getElementById('kpiRuin');
+    ruinEl.textContent = `${(ruin * 100).toFixed(2)}%`;
+    ruinEl.className = `card-value ${ruin < 0.05 ? 'green' : ruin < 0.15 ? 'yellow' : 'red'}`;
+
+    const kelly = data.portfolio?.kelly_total || 0;
+    document.getElementById('kpiKelly').textContent = `${(kelly * 100).toFixed(1)}%`;
+
+    document.getElementById('kpiTrades').textContent = data.trades_per_year || '—';
+
+    const dur = data.duration_seconds || 0;
+    const mins = Math.floor(dur / 60);
+    const secs = Math.floor(dur % 60);
+    document.getElementById('kpiDuration').textContent = `${mins}m ${secs}s`;
+
+    const cost = data.config_used?.cost_round_trip || 0.00325;
+    document.getElementById('kpiCosts').textContent = `${(cost * 100).toFixed(3)}%`;
 }
 
-// ══════════════════════════════════════
-// RENDER CHARTS
-// ══════════════════════════════════════
+// ── RENDER CHARTS ────────────────────────────
 function renderCharts(data) {
+    show('chartSection');
+    show('chartExtraSection');
+
+    const weights = data.portfolio?.weights || {};
     const assets = data.assets || {};
     const tickers = Object.keys(assets);
-    if (tickers.length === 0) return;
+    const tickerLabels = tickers.map(t => t.replace('.SA', ''));
 
-    const labels = tickers.map(t => t.replace('.SA', ''));
-    const colors = ['#06b6d4','#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#ef4444','#6366f1','#14b8a6','#f97316','#a855f7','#22d3ee','#84cc16','#e879f9','#fb923c'];
+    const colors = [
+        '#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6',
+        '#ec4899','#06b6d4','#84cc16','#f97316','#14b8a6',
+        '#e11d48','#a855f7','#22d3ee','#eab308','#d946ef',
+        '#0ea5e9','#65a30d','#dc2626','#7c3aed','#059669'
+    ];
 
-    // BUGFIX #4 — weights extraídos de data.portfolio.assets (era data.portfolio.weights)
-    const weights = {};
-    if (data.portfolio?.assets) {
-        for (const [t, info] of Object.entries(data.portfolio.assets)) {
-            weights[t] = info.weight || 0;
-        }
-    }
-
-    // Allocation Pie
-    if (chartInstances.alloc) chartInstances.alloc.destroy();
-    const allocCtx = document.getElementById('chartAlloc').getContext('2d');
-    chartInstances.alloc = new Chart(allocCtx, {
+    // Allocation chart
+    if (charts.allocation) charts.allocation.destroy();
+    charts.allocation = new Chart(document.getElementById('chartAllocation'), {
         type: 'doughnut',
         data: {
-            labels: labels,
+            labels: Object.keys(weights).map(t => t.replace('.SA', '')),
             datasets: [{
-                data: tickers.map(t => ((weights[t] || 0) * 100).toFixed(1)),
-                backgroundColor: colors.slice(0, tickers.length),
-                borderWidth: 0
+                data: Object.values(weights).map(v => (v * 100).toFixed(1)),
+                backgroundColor: colors,
+                borderWidth: 0,
+                hoverOffset: 8,
             }]
         },
         options: {
             responsive: true,
-            plugins: { legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 10 } } } }
-        }
-    });
-
-    // BUGFIX #6 — Sharpe: era assets[t].sharpe_oos, agora assets[t].sharpe
-    if (chartInstances.sharpe) chartInstances.sharpe.destroy();
-    const sharpeCtx = document.getElementById('chartSharpe').getContext('2d');
-    const sharpeVals = tickers.map(t => assets[t].sharpe || 0);
-    chartInstances.sharpe = new Chart(sharpeCtx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Sharpe',
-                data: sharpeVals,
-                backgroundColor: sharpeVals.map(v => v >= 1 ? '#10b981' : (v >= 0 ? '#f59e0b' : '#ef4444')),
-                borderRadius: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                x: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { display: false } },
-                y: { ticks: { color: '#64748b' }, grid: { color: '#1a1f35' } }
-            },
-            plugins: { legend: { display: false } }
-        }
-    });
-
-    // Max DD Bar
-    if (chartInstances.dd) chartInstances.dd.destroy();
-    const ddCtx = document.getElementById('chartDD').getContext('2d');
-    chartInstances.dd = new Chart(ddCtx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Max Drawdown',
-                data: tickers.map(t => ((assets[t].max_drawdown || 0) * 100).toFixed(1)),
-                backgroundColor: '#ef4444',
-                borderRadius: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                x: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { display: false } },
-                y: { ticks: { color: '#64748b' }, grid: { color: '#1a1f35' } }
-            },
-            plugins: { legend: { display: false } }
-        }
-    });
-
-    // BUGFIX #5 — Growth/Monte Carlo: era assets[t].mc?.expected_growth, agora assets[t].growth; era mc?.prob_profitable, agora prob_profit
-    if (chartInstances.mc) chartInstances.mc.destroy();
-    const mcCtx = document.getElementById('chartMC').getContext('2d');
-    chartInstances.mc = new Chart(mcCtx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Growth',
-                    data: tickers.map(t => assets[t].growth || 0),
-                    backgroundColor: '#10b981',
-                    borderRadius: 4
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: { color: '#94a3b8', font: { size: 11 }, padding: 8, usePointStyle: true, pointStyleWidth: 10 }
                 },
-                {
-                    label: 'P(Lucro)',
-                    data: tickers.map(t => ((assets[t].prob_profit || 0) * 100).toFixed(1)),
-                    backgroundColor: '#3b82f680',
-                    borderRadius: 4
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ` ${ctx.label}: ${ctx.raw}%`
+                    }
                 }
-            ]
+            }
+        }
+    });
+
+    // Monte Carlo probability
+    if (charts.mc) charts.mc.destroy();
+    charts.mc = new Chart(document.getElementById('chartMonteCarlo'), {
+        type: 'bar',
+        data: {
+            labels: tickerLabels,
+            datasets: [{
+                label: 'P(Lucro) %',
+                data: tickers.map(t => ((assets[t].mc?.prob_profitable || 0) * 100).toFixed(1)),
+                backgroundColor: tickers.map((t, i) => {
+                    const p = assets[t].mc?.prob_profitable || 0;
+                    return p > 0.7 ? '#10b981' : p > 0.5 ? '#f59e0b' : '#ef4444';
+                }),
+                borderRadius: 6,
+                borderSkipped: false,
+            }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: tickers.length > 10 ? 'y' : 'x',
             scales: {
-                x: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { display: false } },
-                y: { ticks: { color: '#64748b' }, grid: { color: '#1a1f35' } }
+                y: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.03)' } },
+                x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.03)' } }
             },
-            plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } }
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: { label: ctx => ` Prob. Lucro: ${ctx.raw}%` }
+                }
+            }
+        }
+    });
+
+    // Sharpe chart
+    if (charts.sharpe) charts.sharpe.destroy();
+    const sharpeData = tickers.map(t => assets[t].sharpe_oos || 0);
+    charts.sharpe = new Chart(document.getElementById('chartSharpe'), {
+        type: 'bar',
+        data: {
+            labels: tickerLabels,
+            datasets: [{
+                label: 'Sharpe OOS',
+                data: sharpeData.map(v => v.toFixed(3)),
+                backgroundColor: sharpeData.map(v => v > 0.5 ? '#10b981' : v > 0 ? '#f59e0b' : '#ef4444'),
+                borderRadius: 6,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.03)' } },
+                x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { display: false } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // Drawdown chart
+    if (charts.dd) charts.dd.destroy();
+    charts.dd = new Chart(document.getElementById('chartDrawdown'), {
+        type: 'bar',
+        data: {
+            labels: tickerLabels,
+            datasets: [{
+                label: 'Max Drawdown %',
+                data: tickers.map(t => ((assets[t].max_drawdown || 0) * 100).toFixed(1)),
+                backgroundColor: tickers.map(t => {
+                    const dd = assets[t].max_drawdown || 0;
+                    return dd < 0.1 ? '#10b981' : dd < 0.2 ? '#f59e0b' : '#ef4444';
+                }),
+                borderRadius: 6,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.03)' } },
+                x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { display: false } }
+            },
+            plugins: { legend: { display: false } }
         }
     });
 }
 
-// ══════════════════════════════════════
-// RENDER TABLE
-// ══════════════════════════════════════
-// BUGFIX #7 — todos os campos corrigidos; BUGFIX #12 — recebe portfolio como segundo param
-function renderTable(data, portfolio) {
-    const assets = data.assets || {};
-    const tickers = Object.keys(assets);
-    const capital = parseFloat(document.getElementById('cfg_capital').value) || 10000;
-    const kellyTotal = portfolio?.total_kelly || 0;
-
-    // BUGFIX #7 — weights extraídos de portfolio.assets (era a.weight)
-    const portfolioAssets = portfolio?.assets || {};
-
-    const tbody = document.getElementById('assetTableBody');
+// ── RENDER TABLE ─────────────────────────────
+function renderTable(data) {
+    show('assetsSection');
+    const tbody = document.querySelector('#assetsTable tbody');
     tbody.innerHTML = '';
 
-    tickers.forEach((t, i) => {
-        const a = assets[t];
-        const pa = portfolioAssets[t] || {};
-        // BUGFIX #7 — peso via portfolio.assets[ticker].weight
-        const weight = pa.weight || 0;
-        const valorAloc = capital * kellyTotal * weight;
-        // BUGFIX #7 — sharpe (era sharpe_oos)
-        const sharpe = a.sharpe || 0;
-        // BUGFIX #7 — profit_factor (era profit_factor_oos)
-        const pf = a.profit_factor || 0;
-        // BUGFIX #7 — wf_passed / wf_total (era windows_passed / windows_total)
-        const wfPassed = a.wf_passed || 0;
-        const wfTotal = a.wf_total || 0;
-        // BUGFIX #7 — prob_profit (era mc?.prob_profitable)
-        const probProfit = a.prob_profit || 0;
-        // BUGFIX #7 — growth (era mc?.expected_growth)
-        const growth = a.growth || 0;
+    const assets = data.assets || {};
+    const sorted = Object.entries(assets).sort((a, b) => (b[1].sharpe_oos || 0) - (a[1].sharpe_oos || 0));
 
-        const wfText = `${wfPassed}/${wfTotal}`;
+    sorted.forEach(([ticker, a], idx) => {
+        const row = document.createElement('tr');
+        const pp = ((a.mc?.prob_profitable || 0) * 100).toFixed(0);
+        const pd = ((a.mc?.prob_double || 0) * 100).toFixed(0);
+        const gr = (a.mc?.expected_growth || 1).toFixed(2);
+        const sh = (a.sharpe_oos || 0);
+        const wr = ((a.win_rate || 0) * 100).toFixed(1);
+        const dd = ((a.max_drawdown || 0) * 100).toFixed(1);
+        const wf = `${a.windows_passed || 0}/${a.windows_total || 0}`;
+        const wt = ((a.weight || 0) * 100).toFixed(1);
+        const at = a.avg_trade ? (a.avg_trade * 100).toFixed(3) : '—';
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${i + 1}</td>
-            <td><strong>${t.replace('.SA','')}</strong></td>
-            <td>${(weight * 100).toFixed(1)}%</td>
-            <td>${formatBRL(valorAloc)}</td>
-            <td style="color:${sharpe >= 1 ? 'var(--green)' : (sharpe >= 0 ? 'var(--yellow)' : 'var(--red)')}">${sharpe.toFixed(2)}</td>
-            <td>${pf.toFixed(2)}</td>
-            <td>${((a.win_rate || 0) * 100).toFixed(1)}%</td>
+        row.innerHTML = `
+            <td style="color: var(--text-dim);">${idx + 1}</td>
+            <td class="ticker-cell">${ticker.replace('.SA', '')}</td>
+            <td><strong>${wt}%</strong></td>
+            <td class="${sh > 0.5 ? 'green' : sh > 0 ? 'yellow' : 'red'}">${sh.toFixed(3)}</td>
+            <td>${(a.profit_factor_oos || 0).toFixed(2)}</td>
+            <td class="${parseFloat(wr) > 50 ? 'green' : 'yellow'}">${wr}%</td>
             <td>${a.total_trades || 0}</td>
-            <td>${((a.avg_trade || 0) * 100).toFixed(2)}%</td>
-            <td style="color:var(--red)">${((a.max_drawdown || 0) * 100).toFixed(1)}%</td>
-            <td><span class="badge ${wfPassed >= wfTotal ? 'badge-green' : 'badge-yellow'}">${wfText}</span></td>
-            <td>${(probProfit * 100).toFixed(0)}%</td>
-            <td style="color:var(--green)">${growth.toFixed(2)}x</td>
+            <td>${at}%</td>
+            <td class="red">${dd}%</td>
+            <td class="${a.windows_passed >= 3 ? 'green' : 'yellow'}">${wf}</td>
+            <td class="${parseFloat(pp) > 60 ? 'green' : 'yellow'}">${pp}%</td>
+            <td class="${parseFloat(pd) > 20 ? 'green' : 'yellow'}">${pd}%</td>
+            <td class="cyan">${gr}x</td>
         `;
-        tbody.appendChild(tr);
+        tbody.appendChild(row);
     });
 }
 
-// ══════════════════════════════════════
-// RENDER CAPITAL PROJECTIONS
-// ══════════════════════════════════════
-// BUGFIX #8 — era data.projections (não existe); agora calcula no frontend
+// ── RENDER CAPITAL ───────────────────────────
 function renderCapital(data) {
-    const portfolio = data.portfolio || {};
-    // BUGFIX #8 — annual_return_estimate do portfolio
-    const annualReturn = portfolio.annual_return_estimate || 0;
-    const kellyTotal = portfolio.total_kelly || 0;
-
-    // Nothing to render if no data — KPIs already show the info
-    // Capital sugerido calculado nos KPIs: BUGFIX #8
-}
-
-// ══════════════════════════════════════
-// DAY TRADE CARDS
-// ══════════════════════════════════════
-function renderTradeCards(data) {
-    const assets = data.assets || {};
-    const portfolio = data.portfolio || {};
-    const portfolioAssets = portfolio.assets || {};
-    const tickers = Object.keys(assets);
-    const capital = parseFloat(document.getElementById('cfg_capital').value) || 10000;
-    const kellyTotal = portfolio.total_kelly || 0;
-
-    if (tickers.length === 0) {
-        document.getElementById('tradeCardsSection').style.display = 'none';
-        return;
-    }
-    document.getElementById('tradeCardsSection').style.display = 'block';
-    document.getElementById('tradeDate').textContent = new Date().toLocaleDateString('pt-BR');
-
-    const grid = document.getElementById('tradeCardsGrid');
+    show('capitalSection');
+    const grid = document.getElementById('capitalGrid');
     grid.innerHTML = '';
 
-    const sorted = [...tickers].sort((a, b) => (assets[b].sharpe || 0) - (assets[a].sharpe || 0));
-
-    sorted.forEach((t) => {
-        const a = assets[t];
-        const pa = portfolioAssets[t] || {};
-        const info = ASSET_INFO[t] || { name: t, price: 0, atr: 0 };
-        const weight = pa.weight || 0;
-        const sharpe = a.sharpe || 0;
-
-        let tier, tierLabel, tierColor;
-        if (sharpe >= 1.5) { tier = 'tier1'; tierLabel = 'TIER 1'; tierColor = 'var(--green)'; }
-        else if (sharpe >= 0.5) { tier = 'tier2'; tierLabel = 'TIER 2'; tierColor = 'var(--yellow)'; }
-        else { tier = 'tier3'; tierLabel = 'TIER 3'; tierColor = 'var(--red)'; }
-
-        const price = info.price;
-        const atr = info.atr;
-        const tp = price + atr * 1.5;
-        const sl = price - atr * 1.0;
-        const riskReward = atr > 0 ? ((tp - price) / (price - sl)).toFixed(2) : '—';
-        const capitalTrade = capital * kellyTotal * weight;
-        const qty = price > 0 ? Math.floor(capitalTrade / price) : 0;
-
-        const card = document.createElement('div');
-        card.className = `trade-card ${tier}`;
-        card.innerHTML = `
-            <div class="trade-card-header">
-                <div>
-                    <div class="trade-card-ticker">${t.replace('.SA','')}</div>
-                    <div style="font-size:0.7rem;color:var(--text3)">${info.name}</div>
+    const projections = data.projections || {};
+    for (const [label, info] of Object.entries(projections)) {
+        if (typeof info === 'object') {
+            grid.innerHTML += `
+                <div class="capital-card">
+                    <div class="capital-label">${label}</div>
+                    <div class="capital-invested">${info.investido}</div>
+                    <div class="capital-projected">${info.projetado_1ano}</div>
+                    <div class="capital-profit">Lucro: ${info.lucro_estimado} (${info.retorno})</div>
                 </div>
-                <span class="trade-card-tier" style="background:${tierColor}20;color:${tierColor}">${tierLabel}</span>
-            </div>
-            <div class="trade-visual">
-                <div class="trade-visual-line tp"></div>
-                <div class="trade-visual-label" style="top:7%;color:var(--green)">TP ${formatBRL(tp)}</div>
-                <div class="trade-visual-line entry"></div>
-                <div class="trade-visual-label" style="top:37%;color:var(--cyan)">ENTRY ${formatBRL(price)}</div>
-                <div class="trade-visual-line sl"></div>
-                <div class="trade-visual-label" style="top:72%;color:var(--red)">SL ${formatBRL(sl)}</div>
-            </div>
-            <div class="trade-card-prices">
-                <div class="trade-price-row"><span class="trade-price-label">Take Profit</span><span class="trade-price-value trade-tp">${formatBRL(tp)}</span></div>
-                <div class="trade-price-row"><span class="trade-price-label">Entrada (abertura)</span><span class="trade-price-value trade-entry">${formatBRL(price)}</span></div>
-                <div class="trade-price-row"><span class="trade-price-label">Stop Loss</span><span class="trade-price-value trade-sl">${formatBRL(sl)}</span></div>
-                <div class="trade-price-row"><span class="trade-price-label">Saída 16:55</span><span class="trade-price-value trade-exit">${formatBRL(price)}</span></div>
-            </div>
-            <div class="trade-metrics">
-                <div class="trade-metric"><div class="trade-metric-label">Qtd</div><div class="trade-metric-value">${qty}</div></div>
-                <div class="trade-metric"><div class="trade-metric-label">R:R</div><div class="trade-metric-value">${riskReward}</div></div>
-                <div class="trade-metric"><div class="trade-metric-label">Capital</div><div class="trade-metric-value">${formatBRL(capitalTrade)}</div></div>
-            </div>
-        `;
-        grid.appendChild(card);
-    });
-}
-
-// ══════════════════════════════════════
-// LOGS
-// ══════════════════════════════════════
-function addLog(msg) {
-    const box = document.getElementById('logsBox');
-    const time = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-    if (box.textContent === 'Nenhum log ainda.') box.innerHTML = '';
-    box.innerHTML += `<div>[${time}] ${msg}</div>`;
-    box.scrollTop = box.scrollHeight;
-}
-
-// ══════════════════════════════════════
-// HISTORY
-// ══════════════════════════════════════
-// BUGFIX #9 — era run.id, agora run.run_id
-async function loadHistory() {
-    const el = document.getElementById('historyInfo');
-    el.innerHTML = '<span style="color:var(--cyan)">Carregando...</span>';
-    try {
-        const resp = await fetch(API_BASE + '/history');
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const data = await resp.json();
-        const runs = data.runs || [];
-        if (!Array.isArray(runs) || runs.length === 0) {
-            el.innerHTML = 'Nenhum histórico encontrado.';
-            return;
+            `;
+        } else {
+            grid.innerHTML += `
+                <div class="capital-card">
+                    <div class="capital-label">${label}</div>
+                    <div class="capital-projected">${info}</div>
+                </div>
+            `;
         }
-        let html = '<table><thead><tr><th>Data</th><th>Duração</th><th>Validados</th><th>Status</th><th>Ação</th></tr></thead><tbody>';
-        runs.forEach(run => {
-            const ts = run.timestamp ? new Date(run.timestamp).toLocaleString('pt-BR') : '—';
-            const dur = run.duration ? run.duration.toFixed(1) + 's' : '—';
-            const validated = run.validated != null ? run.validated : 0;
-            const status = run.status || '?';
-            const statusBadge = status === 'completed' ? 'badge-green' : (status === 'failed' ? 'badge-red' : 'badge-yellow');
-            // BUGFIX #9 — usar run.run_id
-            const rid = run.run_id || '';
-            html += `<tr>
-                <td>${ts}</td><td>${dur}</td><td>${validated}</td>
-                <td><span class="badge ${statusBadge}">${status}</span></td>
-                <td>${rid && status === 'completed' ? `<button class="btn btn-secondary" style="padding:4px 8px;font-size:0.7rem" onclick="loadResults('${rid}')">Ver</button>` : '—'}</td>
-            </tr>`;
-        });
-        html += '</tbody></table>';
-        el.innerHTML = html;
-    } catch(e) {
-        el.innerHTML = '❌ Erro ao carregar histórico: ' + e.message;
+    }
+
+    document.getElementById('suggestedCapital').textContent = data.suggested_capital || '—';
+}
+
+// ── HELPERS ──────────────────────────────────
+function show(id, display) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.classList.remove('hidden');
+        if (display) el.style.display = display;
     }
 }
 
-// ══════════════════════════════════════
-// SCHEDULER
-// ══════════════════════════════════════
-// BUGFIX #10 — reescrito para formato real: {scheduler:{...}, config:{...}}
-async function loadScheduler() {
-    const el = document.getElementById('schedulerInfo');
-    el.innerHTML = '<span style="color:var(--cyan)">Carregando...</span>';
-    try {
-        const resp = await fetch(API_BASE + '/scheduler');
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const data = await resp.json();
-
-        // BUGFIX #10 — ler de data.scheduler e data.config
-        const sched = data.scheduler || {};
-        const cfg = data.config || {};
-
-        const running = sched.running ? '🟢 Ativo' : '🔴 Inativo';
-        const nextDaily = sched.next_daily ? new Date(sched.next_daily).toLocaleString('pt-BR') : '—';
-        const nextRetrain = sched.next_retrain ? new Date(sched.next_retrain).toLocaleString('pt-BR') : '—';
-        const lastDaily = sched.last_daily ? new Date(sched.last_daily).toLocaleString('pt-BR') : 'Nenhuma';
-        const lastRetrain = sched.last_retrain ? new Date(sched.last_retrain).toLocaleString('pt-BR') : 'Nenhum';
-        const dailyTime = cfg.daily_time || '19:00 BRT';
-        const retrainDay = cfg.retrain_day || 'sunday';
-        const retrainHour = cfg.retrain_hour != null ? cfg.retrain_hour : 3;
-
-        el.innerHTML = `
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">
-                <div class="kpi-card">
-                    <div class="kpi-label">ANÁLISE DIÁRIA</div>
-                    <div class="kpi-value" style="font-size:1rem;color:var(--cyan)">${dailyTime}</div>
-                    <div class="kpi-sub">Próxima: ${nextDaily}</div>
-                    <div class="kpi-sub">Última: ${lastDaily}</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">RETRAIN SEMANAL</div>
-                    <div class="kpi-value" style="font-size:1rem;color:var(--purple)">${retrainDay} ${retrainHour}h</div>
-                    <div class="kpi-sub">Próximo: ${nextRetrain}</div>
-                    <div class="kpi-sub">Último: ${lastRetrain}</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">STATUS</div>
-                    <div class="kpi-value" style="font-size:1rem">${running}</div>
-                    <div class="kpi-sub">Scheduler do backend</div>
-                </div>
-            </div>
-        `;
-    } catch(e) {
-        el.innerHTML = '❌ Erro ao carregar scheduler: ' + e.message;
-    }
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
-
-// ══════════════════════════════════════
-// TUTORIAL
-// ══════════════════════════════════════
-function renderTutorial() {
-    const el = document.getElementById('tutorialContent');
-    el.innerHTML = `
-        <div class="tutorial-section">
-            <h3>1. Entendendo os Dados</h3>
-            <p>O sistema analisa ativos da B3 usando Machine Learning (Random Forest, XGBoost, LightGBM) com validação Walk-Forward. Cada ativo passa por:</p>
-            <ul>
-                <li><strong>Feature Engineering:</strong> 50+ indicadores técnicos (RSI, MACD, Bollinger, médias, volume, etc.)</li>
-                <li><strong>Detecção de Regime:</strong> Hidden Markov Model identifica Bull/Bear/Sideways</li>
-                <li><strong>Walk-Forward:</strong> treino/teste em janelas deslizantes para evitar overfitting</li>
-                <li><strong>Monte Carlo:</strong> milhares de simulações para estimar cenários futuros</li>
-                <li><strong>Kelly Criterion:</strong> dimensionamento ótimo de posição baseado em probabilidade e payoff</li>
-            </ul>
-        </div>
-
-        <div class="tutorial-section">
-            <h3>2. Lendo os KPIs</h3>
-            <p>No dashboard, os KPIs mostram:</p>
-            <ul>
-                <li><strong>Ativos Validados:</strong> quantos passaram no Walk-Forward (mínimo de janelas lucrativas)</li>
-                <li><strong>Retorno Anual Est.:</strong> retorno esperado do portfólio baseado no backtest</li>
-                <li><strong>Risco de Ruína:</strong> probabilidade de perder 75%+ do capital (idealmente &lt; 5%)</li>
-                <li><strong>Kelly Total:</strong> % do capital que deve ser alocado (Half-Kelly para segurança)</li>
-                <li><strong>Sharpe:</strong> retorno ajustado por risco (&gt;1 = bom, &gt;2 = excelente)</li>
-            </ul>
-        </div>
-
-        <div class="tutorial-section">
-            <h3>3. Operando Day Trade</h3>
-            <div class="tutorial-box">
-                <strong>Regra de Ouro:</strong> Compre na abertura (9:00), coloque TP e SL imediatamente, e saia até 16:55 se nenhum for atingido.
-            </div>
-            <p>Para cada ativo validado, o sistema gera um card com:</p>
-            <ul>
-                <li><strong>Entrada:</strong> preço de abertura do dia</li>
-                <li><strong>Take Profit (TP):</strong> entrada + 1.5 × ATR</li>
-                <li><strong>Stop Loss (SL):</strong> entrada − 1.0 × ATR</li>
-                <li><strong>Saída Forçada:</strong> 16:55 — fechar posição independente do resultado</li>
-                <li><strong>Qtd:</strong> número de ações calculado pelo Kelly × peso × capital</li>
-            </ul>
-            <div class="tutorial-box warning">
-                <strong>Atenção:</strong> Este é um sistema de backtesting/estudo. Resultados passados NÃO garantem resultados futuros. Sempre gerencie risco!
-            </div>
-        </div>
-
-        <div class="tutorial-section">
-            <h3>4. Tiers de Qualidade</h3>
-            <ul>
-                <li><span style="color:var(--green)">Tier 1 (Sharpe ≥ 1.5):</span> Sinais de alta confiança — priorizar</li>
-                <li><span style="color:var(--yellow)">Tier 2 (Sharpe 0.5–1.5):</span> Sinais moderados — operar com cautela</li>
-                <li><span style="color:var(--red)">Tier 3 (Sharpe &lt; 0.5):</span> Sinais fracos — considerar não operar</li>
-            </ul>
-        </div>
-
-        <div class="tutorial-section">
-            <h3>5. Configuração</h3>
-            <p>Na aba Configuração, você pode ajustar:</p>
-            <ul>
-                <li><strong>Capital:</strong> valor total disponível para operações</li>
-                <li><strong>Tickers:</strong> adicionar/remover ativos da B3</li>
-                <li><strong>Walk-Forward:</strong> nº de janelas e critério de aprovação</li>
-                <li><strong>Thresholds:</strong> sensibilidade dos sinais</li>
-                <li><strong>Sessões:</strong> salvar múltiplas configurações para comparar resultados</li>
-            </ul>
-        </div>
-
-        <div class="tutorial-section">
-            <h3>6. Scheduler Automático</h3>
-            <p>O sistema executa automaticamente:</p>
-            <ul>
-                <li><strong>Análise Diária:</strong> todos os dias às 19:00 BRT (após fechamento do mercado)</li>
-                <li><strong>Retrain Semanal:</strong> domingos às 03:00 — retreina os modelos com dados mais recentes</li>
-            </ul>
-            <p>Os resultados ficam disponíveis no Histórico e podem ser consultados a qualquer momento.</p>
-        </div>
-    `;
-}
-
 </script>
 </body>
 </html>
